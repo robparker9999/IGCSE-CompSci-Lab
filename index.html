@@ -3,2568 +3,849 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CIE Pseudocode IDE</title>
+<title>IGCSE CompSci Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <style>
+/* ── THEME VARIABLES (matching existing pages) ───────── */
 :root {
-  --bg-main: #0d0d12;
-  --bg-panel: #131318;
-  --bg-editor: #0f0f15;
-  --bg-sidebar: #0a0a0f;
-  --bg-hover: #1a1a24;
-  --bg-active: #1e1e2e;
-  --accent: #a78bfa;
-  --accent-dim: #7c3aed;
-  --accent-glow: rgba(167,139,250,0.15);
-  --green: #22c55e;
-  --green-dim: rgba(34,197,94,0.15);
-  --red: #f87171;
-  --red-dim: rgba(248,113,113,0.15);
-  --yellow: #fbbf24;
-  --cyan: #67e8f9;
-  --orange: #fb923c;
-  --text-primary: #e2e8f0;
-  --text-secondary: #94a3b8;
-  --text-muted: #475569;
-  --border: rgba(148,163,184,0.08);
+  --bg-main:       #0d0d12;
+  --bg-panel:      #131318;
+  --bg-editor:     #0f0f15;
+  --bg-sidebar:    #0a0a0f;
+  --bg-hover:      #1a1a24;
+  --bg-active:     #1e1e2e;
+  --accent:        #a78bfa;
+  --accent-dim:    rgba(167,139,250,0.15);
+  --accent-glow:   rgba(167,139,250,0.25);
+  --green:         #22c55e;
+  --red:           #f87171;
+  --yellow:        #fbbf24;
+  --cyan:          #67e8f9;
+  --text-primary:  #e2e8f0;
+  --text-secondary:#94a3b8;
+  --text-muted:    #475569;
+  --border:        rgba(148,163,184,0.08);
   --border-bright: rgba(167,139,250,0.2);
-  --line-num: #3d3d52;
-  --scrollbar: rgba(100,100,140,0.2);
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --font-ui: 'Outfit', sans-serif;
-  --radius: 6px;
-  --transition: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --scrollbar:     rgba(100,100,140,0.2);
+  --font-mono:     'JetBrains Mono','Fira Code',monospace;
+  --font-ui:       'Outfit',sans-serif;
+  --radius:        6px;
+  --transition:    0.15s cubic-bezier(0.4,0,0.2,1);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-html, body {
-  height: 100%;
-  background: var(--bg-main);
-  color: var(--text-primary);
-  font-family: var(--font-ui);
-  overflow: hidden;
-  font-size: 14px;
+body.light-mode {
+  --bg-main:       #f8fafc;
+  --bg-panel:      #f0f0f5;
+  --bg-editor:     #ffffff;
+  --bg-sidebar:    #e8e8f0;
+  --bg-hover:      #ede9fb;
+  --bg-active:     #d8d8ee;
+  --accent:        #7c3aed;
+  --accent-dim:    rgba(124,58,237,0.12);
+  --accent-glow:   rgba(124,58,237,0.2);
+  --green:         #15803d;
+  --red:           #dc2626;
+  --yellow:        #b45309;
+  --cyan:          #0369a1;
+  --text-primary:  #1e1b2e;
+  --text-secondary:#4a4a6a;
+  --text-muted:    #7a7a9a;
+  --border:        rgba(0,0,0,0.08);
+  --border-bright: rgba(124,58,237,0.25);
+  --scrollbar:     rgba(0,0,0,0.12);
 }
 
-/* ======== LAYOUT ======== */
-#app {
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
-}
-
-/* TITLE BAR */
-#titlebar {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  height: 38px;
-  background: var(--bg-sidebar);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  z-index: 100;
-  gap: 16px;
-  user-select: none;
-}
-#titlebar .logo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--accent);
-  letter-spacing: 0.5px;
-}
-#titlebar .logo svg { width: 20px; height: 20px; }
-#titlebar .title-center {
-  flex: 1;
-  text-align: center;
-  font-size: 12px;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-}
-#titlebar .title-actions {
-  display: flex;
-  gap: 6px;
-}
-.title-btn {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-  font-family: var(--font-ui);
-  font-size: 11px;
-  padding: 3px 10px;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.title-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-bright); }
-.title-btn.accent { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
-.title-btn.accent:hover { background: var(--accent); color: #fff; }
-
-/* MAIN CONTENT (below titlebar) */
-#main-content {
-  display: flex;
-  flex: 1;
-  margin-top: 38px;
-  height: calc(100vh - 38px);
-  overflow: hidden;
-}
-
-/* ACTIVITY BAR */
-#activity-bar {
-  width: 44px;
-  background: var(--bg-sidebar);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 8px 0;
-  gap: 4px;
-  flex-shrink: 0;
-}
-.activity-btn {
-  width: 36px;
-  height: 36px;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius);
-  color: var(--text-muted);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition);
-  position: relative;
-}
-.activity-btn:hover { background: var(--bg-hover); color: var(--text-secondary); }
-.activity-btn.active { background: var(--accent-glow); color: var(--accent); }
-.activity-btn svg { width: 18px; height: 18px; }
-
-/* SIDEBAR PANEL */
-#sidebar-panel {
-  width: 220px;
-  background: var(--bg-panel);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  overflow: hidden;
-  transition: width 0.2s ease;
-}
-#sidebar-panel.collapsed { width: 0; }
-.sidebar-header {
-  padding: 10px 12px;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.sidebar-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px;
-}
-.sidebar-content::-webkit-scrollbar { width: 4px; }
-.sidebar-content::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 2px; }
-
-/* SNIPPET ITEMS */
-.snippet-category {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--accent);
-  padding: 8px 4px 4px;
-}
-.snippet-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: var(--transition);
-  font-size: 12px;
-  color: var(--text-secondary);
-  border: 1px solid transparent;
-}
-.snippet-item:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-  border-color: var(--border);
-}
-.snippet-item svg { width: 14px; height: 14px; color: var(--accent); flex-shrink: 0; }
-
-/* SETTINGS PANEL */
-.settings-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 4px;
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-.settings-item label { color: var(--text-secondary); }
-.toggle {
-  position: relative;
-  width: 32px;
-  height: 18px;
-}
-.toggle input { opacity: 0; width: 0; height: 0; }
-.slider {
-  position: absolute;
-  inset: 0;
-  background: var(--bg-hover);
-  border-radius: 9px;
-  border: 1px solid var(--border);
-  cursor: pointer;
-  transition: var(--transition);
-}
-.slider:before {
-  content: '';
-  position: absolute;
-  width: 12px; height: 12px;
-  left: 2px; top: 2px;
-  background: var(--text-muted);
-  border-radius: 50%;
-  transition: var(--transition);
-}
-input:checked + .slider { background: var(--accent-dim); border-color: var(--accent); }
-input:checked + .slider:before { transform: translateX(14px); background: var(--accent); }
-
-select.settings-select {
-  background: var(--bg-hover);
-  border: 1px solid var(--border);
-  color: var(--text-primary);
-  font-family: var(--font-ui);
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-/* EDITOR AREA */
-#editor-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 0;
-}
-
-/* EDITOR TABS */
-#editor-tabs {
-  height: 34px;
-  background: var(--bg-panel);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: stretch;
-  flex-shrink: 0;
-}
-.editor-tab {
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  font-size: 12px;
-  color: var(--text-muted);
-  cursor: pointer;
-  border-right: 1px solid var(--border);
-  gap: 6px;
-  white-space: nowrap;
-  font-family: var(--font-mono);
-  position: relative;
-}
-.editor-tab.active {
-  background: var(--bg-editor);
-  color: var(--text-primary);
-}
-.editor-tab.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 2px;
-  background: var(--accent);
-}
-.tab-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-
-/* EDITOR */
-#editor-container {
-  flex: 1;
-  overflow: hidden;
-  position: relative;
-}
-#code-editor {
-  width: 100%;
-  height: 100%;
-  background: var(--bg-editor);
-  border: none;
-  outline: none;
-  resize: none;
-  font-family: var(--font-mono);
-  font-size: 14px;
-  line-height: 1.7;
-  color: var(--text-primary);
-  padding: 0;
-  overflow: hidden;
-}
-#editor-inner {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  overflow: hidden;
-}
-#line-numbers {
-  width: 48px;
-  background: var(--bg-editor);
-  padding: 14px 0;
-  text-align: right;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 1.7;
-  color: var(--line-num);
-  user-select: none;
-  flex-shrink: 0;
-  overflow: hidden;
-  border-right: 1px solid var(--border);
-}
-#line-numbers span {
-  display: block;
-  padding-right: 10px;
-  height: calc(13px * 1.7);
-}
-#line-numbers span.active-line { color: var(--text-secondary); }
-#code-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  resize: none;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 1.7;
-  color: transparent;
-  caret-color: var(--accent);
-  padding: 14px 16px;
-  overflow-y: auto;
-  overflow-x: auto;
-  white-space: pre;
-  position: absolute;
-  inset: 0;
-  padding-left: 64px;
-  z-index: 2;
-  spellcheck: false;
-}
-#code-highlight {
-  flex: 1;
-  padding: 14px 16px;
-  padding-left: 64px;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 1.7;
-  white-space: pre;
-  overflow: hidden;
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-}
-#code-input::-webkit-scrollbar { width: 8px; height: 8px; }
-#code-input::-webkit-scrollbar-track { background: transparent; }
-#code-input::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 4px; }
-
-/* Error highlight line */
-.error-line { background: rgba(248,113,113,0.07); }
-.error-underline { text-decoration: wavy underline var(--red); }
-
-/* STATUS BAR */
-#status-bar {
-  height: 22px;
-  background: var(--bg-sidebar);
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  gap: 16px;
-  font-size: 11px;
-  color: var(--text-muted);
-  flex-shrink: 0;
-  font-family: var(--font-mono);
-}
-#status-bar .status-item { display: flex; align-items: center; gap: 4px; }
-#status-bar .status-item.accent { color: var(--accent); }
-#status-bar .status-item.green { color: var(--green); }
-#status-bar .status-item.red { color: var(--red); }
-
-/* RIGHT PANEL */
-#right-panel {
-  width: 320px;
-  background: var(--bg-panel);
-  border-left: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  overflow: hidden;
-}
-#right-tabs {
-  display: flex;
-  background: var(--bg-sidebar);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.right-tab {
-  flex: 1;
-  padding: 8px;
-  text-align: center;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: var(--transition);
-  border-bottom: 2px solid transparent;
-}
-.right-tab:hover { color: var(--text-secondary); }
-.right-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-#right-content {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-.right-pane { display: none; flex: 1; flex-direction: column; overflow: hidden; }
-.right-pane.active { display: flex; }
-
-/* CONSOLE */
-#console-output {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px 12px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 1.8;
-}
-#console-output::-webkit-scrollbar { width: 4px; }
-#console-output::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 2px; }
-.console-line {
-  padding: 1px 0;
-  border-radius: 3px;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-.console-line.output { color: var(--text-primary); }
-.console-line.output::before { content: '▶ '; color: var(--green); font-size: 10px; }
-.console-line.error { color: var(--red); background: var(--red-dim); padding: 2px 6px; border-left: 2px solid var(--red); border-radius: 3px; }
-.console-line.info { color: var(--text-muted); }
-.console-line.input-line { color: var(--cyan); }
-.console-line.input-line::before { content: '◀ '; color: var(--cyan); font-size: 10px; }
-
-/* INPUT FIELD in console */
-#input-form {
-  border-top: 1px solid var(--border);
-  padding: 8px 12px;
-  display: none;
-  flex-shrink: 0;
-}
-#input-form.visible { display: flex; gap: 8px; align-items: center; }
-#input-prompt-label {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--cyan);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-#input-field {
-  flex: 1;
-  background: var(--bg-editor);
-  border: 1px solid var(--border-bright);
-  border-radius: 4px;
-  color: var(--cyan);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  padding: 4px 8px;
-  outline: none;
-}
-#input-field:focus { border-color: var(--accent); }
-#input-submit {
-  background: var(--accent-dim);
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  font-family: var(--font-ui);
-  font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: var(--transition);
-  flex-shrink: 0;
-}
-#input-submit:hover { background: var(--accent); color: #fff; }
-
-/* TRACE TABLE */
-#trace-container {
-  flex: 1;
-  overflow: auto;
-  padding: 8px;
-}
-#trace-container::-webkit-scrollbar { width: 4px; height: 4px; }
-#trace-container::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 2px; }
-#trace-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: var(--font-mono);
-  font-size: 11px;
-}
-#trace-table th {
-  background: var(--bg-active);
-  color: var(--accent);
-  padding: 5px 8px;
-  text-align: left;
-  border: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  font-weight: 600;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-}
-#trace-table td {
-  padding: 4px 8px;
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-#trace-table tr:hover td { background: var(--bg-hover); color: var(--text-primary); }
-#trace-table .val-changed td { color: var(--green); }
-.trace-hint {
-  color: var(--text-muted);
-  font-size: 12px;
-  text-align: center;
-  padding: 24px;
-  font-family: var(--font-ui);
-}
-
-/* ACTION BAR */
-#action-bar {
-  border-top: 1px solid var(--border);
-  padding: 10px 12px;
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-  background: var(--bg-sidebar);
-}
-.action-btn {
-  flex: 1;
-  padding: 8px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  font-family: var(--font-ui);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  letter-spacing: 0.3px;
-}
-.action-btn svg { width: 14px; height: 14px; }
-#btn-run {
-  background: var(--green-dim);
-  border-color: var(--green);
-  color: var(--green);
-}
-#btn-run:hover { background: var(--green); color: #000; }
-#btn-run:disabled { opacity: 0.4; cursor: not-allowed; }
-#btn-step {
-  background: transparent;
-  color: var(--accent);
-  border-color: var(--accent);
-}
-#btn-step:hover { background: var(--accent-glow); }
-#btn-reset {
-  background: transparent;
-  color: var(--text-secondary);
-  border-color: var(--border);
-}
-#btn-reset:hover { background: var(--bg-hover); color: var(--text-primary); }
-
-/* INLINE INPUT MODAL */
-#input-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
-}
-#input-modal-overlay.visible { display: flex; }
-#input-modal {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-bright);
-  border-radius: 10px;
-  padding: 24px;
-  width: 360px;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(167,139,250,0.1);
-}
-#input-modal h3 {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-}
-#input-modal p {
-  font-size: 12px;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  margin-bottom: 14px;
-}
-#modal-input {
-  width: 100%;
-  background: var(--bg-editor);
-  border: 1px solid var(--border-bright);
-  border-radius: var(--radius);
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  padding: 8px 12px;
-  outline: none;
-  margin-bottom: 12px;
-}
-#modal-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
-#modal-submit {
-  width: 100%;
-  padding: 9px;
-  background: var(--accent-dim);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius);
-  color: var(--accent);
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-}
-#modal-submit:hover { background: var(--accent); color: #fff; }
-
-/* Syntax colors */
-.kw { color: #c084fc; font-weight: 500; } /* keywords */
-.kw2 { color: #818cf8; } /* secondary keywords */
-.str { color: #86efac; } /* strings */
-.num { color: #fca5a5; } /* numbers */
-.bool { color: #fb923c; } /* booleans */
-.op { color: #67e8f9; } /* operators */
-.comment { color: #4b5563; font-style: italic; }
-.type { color: #fbbf24; } /* types */
-.fn { color: #67e8f9; } /* functions */
-.ident { color: #e2e8f0; } /* identifiers */
-.arrow { color: #c084fc; font-weight: bold; } /* <- */
-.punc { color: #94a3b8; }
-
-/* TOOLTIP */
-.tooltip {
-  position: absolute;
-  left: 44px;
-  background: var(--bg-active);
-  border: 1px solid var(--border-bright);
-  color: var(--text-primary);
-  font-size: 11px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.15s;
-  z-index: 200;
-}
-.activity-btn:hover .tooltip { opacity: 1; }
-
-/* SCROLLBAR */
+/* ── RESET ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
 
-/* WELCOME STATE */
-.console-welcome {
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 8px;
-}
-.console-welcome .welcome-title { color: var(--accent); font-size: 12px; margin-bottom: 4px; }
+html { scroll-behavior: smooth; }
 
-/* LINTER BADGE */
-#linter-badge {
+body {
+  background: var(--bg-main);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── TITLEBAR ─────────────────────────────────────────── */
+#titlebar {
+  position: fixed; top: 0; left: 0; right: 0; height: 38px;
+  background: var(--bg-sidebar); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 12px; z-index: 200; gap: 16px;
+}
+.logo {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700; font-size: 13px; color: var(--accent);
+  letter-spacing: 0.5px; text-decoration: none; white-space: nowrap; flex-shrink: 0;
+}
+.logo svg { width: 20px; height: 20px; flex-shrink: 0; }
+.title-center {
+  flex: 1; text-align: center; font-size: 12px;
+  color: var(--text-muted); font-family: var(--font-mono);
+}
+.title-actions { display: flex; gap: 6px; align-items: center; }
+.title-btn {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text-secondary); font-family: var(--font-ui);
+  font-size: 11px; padding: 3px 10px; border-radius: var(--radius);
+  cursor: pointer; transition: var(--transition);
+  display: flex; align-items: center; gap: 5px;
+  text-decoration: none; white-space: nowrap;
+}
+.title-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-bright); }
+#btn-theme { font-size: 14px; padding: 4px 10px; }
+
+/* ── PAGE CONTENT ─────────────────────────────────────── */
+#page {
+  padding-top: 38px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HERO ─────────────────────────────────────────────── */
+#hero {
+  position: relative;
+  padding: 80px 24px 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+}
+
+/* Animated background grid */
+#hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(167,139,250,0.12) 0%, transparent 70%),
+    linear-gradient(rgba(148,163,184,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148,163,184,0.04) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+/* Glowing orbs */
+#hero::after {
+  content: '';
+  position: absolute;
+  width: 500px; height: 500px;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -60%);
+  background: radial-gradient(circle, rgba(167,139,250,0.07) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  animation: pulse-orb 6s ease-in-out infinite;
+}
+@keyframes pulse-orb {
+  0%, 100% { opacity: 0.6; transform: translate(-50%, -60%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -60%) scale(1.15); }
+}
+
+.hero-inner { position: relative; z-index: 1; max-width: 640px; }
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--accent-dim); border: 1px solid var(--border-bright);
+  color: var(--accent); font-size: 10px; font-weight: 600;
+  font-family: var(--font-mono); letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 4px 12px; border-radius: 100px; margin-bottom: 28px;
+  animation: fade-up 0.5s ease both;
+}
+.hero-badge-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent); animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.hero-logo-mark {
+  width: 52px; height: 52px; margin: 0 auto 20px;
+  animation: fade-up 0.5s ease 0.1s both;
+}
+.hero-logo-mark svg {
+  width: 100%; height: 100%; color: var(--accent);
+  filter: drop-shadow(0 0 16px rgba(167,139,250,0.4));
+}
+
+h1.hero-title {
+  font-size: clamp(28px, 5vw, 46px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+  animation: fade-up 0.5s ease 0.15s both;
+}
+h1.hero-title span {
+  color: var(--accent);
+  text-shadow: 0 0 30px rgba(167,139,250,0.35);
+}
+
+.hero-sub {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 480px;
+  margin: 0 auto 36px;
+  animation: fade-up 0.5s ease 0.2s both;
+}
+
+.hero-meta {
+  display: flex; align-items: center; justify-content: center;
+  gap: 20px; flex-wrap: wrap;
+  animation: fade-up 0.5s ease 0.25s both;
+}
+.hero-meta-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+.hero-meta-item svg { color: var(--accent); opacity: 0.7; }
+.hero-meta-divider { width: 1px; height: 14px; background: var(--border); }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── SECTION WRAPPER ──────────────────────────────────── */
+.section {
+  padding: 0 24px 64px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+.section-label {
+  font-size: 10px; font-weight: 600; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--accent);
+  font-family: var(--font-mono);
+  margin-bottom: 6px;
+}
+.section-title {
+  font-size: 20px; font-weight: 700;
+  color: var(--text-primary); margin-bottom: 4px;
+}
+.section-sub {
+  font-size: 13px; color: var(--text-muted); margin-bottom: 28px;
+}
+
+/* ── TOOL CARDS ───────────────────────────────────────── */
+#tools { padding-top: 0; }
+
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.tool-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px;
+  display: flex; flex-direction: column; gap: 16px;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  position: relative; overflow: hidden;
+  animation: fade-up 0.5s ease both;
+}
+.tool-card:nth-child(1) { animation-delay: 0.3s; }
+.tool-card:nth-child(2) { animation-delay: 0.38s; }
+.tool-card:nth-child(3) { animation-delay: 0.46s; }
+
+.tool-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 0% 0%, var(--card-glow, rgba(167,139,250,0.06)), transparent 60%);
+  pointer-events: none;
+}
+.tool-card:hover {
+  border-color: var(--border-bright);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px var(--accent-glow);
+  transform: translateY(-2px);
+}
+
+.card-icon {
+  width: 40px; height: 40px;
+  background: var(--accent-dim);
+  border: 1px solid var(--border-bright);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.card-icon svg { width: 20px; height: 20px; color: var(--accent); }
+
+.card-header { display: flex; align-items: center; gap: 12px; }
+
+.card-title {
+  font-size: 15px; font-weight: 700;
+  color: var(--text-primary); line-height: 1.2;
+}
+.card-tag {
+  font-size: 9px; font-weight: 600; letter-spacing: 1.5px;
+  text-transform: uppercase; font-family: var(--font-mono);
+  color: var(--text-muted); margin-top: 2px;
+}
+
+.card-desc {
+  font-size: 12.5px; color: var(--text-secondary);
+  line-height: 1.65; flex: 1;
+}
+
+.card-features {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.card-feat {
+  font-size: 10px; font-family: var(--font-mono);
+  color: var(--text-muted);
+  background: var(--bg-editor);
+  border: 1px solid var(--border);
+  padding: 2px 8px; border-radius: 100px;
+}
+
+.card-actions {
+  display: flex; gap: 8px; margin-top: 4px;
+}
+.btn-launch {
+  flex: 1;
+  background: var(--accent); color: #0d0d12;
+  font-family: var(--font-ui); font-size: 12px; font-weight: 700;
+  border: none; border-radius: var(--radius); padding: 8px 14px;
+  cursor: pointer; transition: var(--transition); text-decoration: none;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  letter-spacing: 0.3px;
+}
+.btn-launch:hover { filter: brightness(1.15); box-shadow: 0 4px 16px rgba(167,139,250,0.35); }
+.btn-docs {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text-secondary); font-family: var(--font-ui);
+  font-size: 11px; padding: 8px 12px; border-radius: var(--radius);
+  cursor: pointer; transition: var(--transition);
+  display: flex; align-items: center; gap: 5px; white-space: nowrap;
+}
+.btn-docs:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-bright); }
+
+/* ── ABOUT SECTION ───────────────────────────────────── */
+#about {
+  padding-top: 16px;
+}
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 700px) {
+  .about-grid { grid-template-columns: 1fr; }
+}
+.about-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 22px;
+}
+.about-card-title {
+  font-size: 12px; font-weight: 600;
+  color: var(--accent); font-family: var(--font-mono);
+  letter-spacing: 0.5px; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.about-card-title svg { width: 13px; height: 13px; }
+.about-card p {
+  font-size: 12.5px; color: var(--text-secondary); line-height: 1.7;
+}
+.about-card p + p { margin-top: 8px; }
+
+.syllabus-list {
+  list-style: none; margin-top: 10px; display: flex; flex-direction: column; gap: 6px;
+}
+.syllabus-list li {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 12px; color: var(--text-secondary); line-height: 1.5;
+}
+.syl-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0; margin-top: 5px;
+}
+
+/* ── FOOTER ───────────────────────────────────────────── */
+footer {
+  margin-top: auto;
+  background: var(--bg-sidebar);
+  border-top: 1px solid var(--border);
+  padding: 20px 24px;
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-family: var(--font-mono);
-  font-size: 11px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
 }
-#linter-badge.ok { color: var(--green); }
-#linter-badge.warn { color: var(--yellow); }
-#linter-badge.err { color: var(--red); }
+.footer-left {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text-muted);
+}
+.footer-left .logo-sm {
+  display: flex; align-items: center; gap: 6px;
+  font-weight: 700; color: var(--accent); font-size: 12px;
+}
+.footer-left .logo-sm svg { width: 14px; height: 14px; }
+.footer-sep { color: var(--text-muted); opacity: 0.4; }
+.footer-right {
+  display: flex; align-items: center; gap: 16px;
+}
+.footer-link {
+  font-size: 11px; font-family: var(--font-mono);
+  color: var(--text-muted); text-decoration: none;
+  transition: var(--transition); display: flex; align-items: center; gap: 5px;
+}
+.footer-link:hover { color: var(--accent); }
+.footer-tag {
+  font-size: 10px; font-family: var(--font-mono);
+  color: var(--text-muted); letter-spacing: 1px;
+}
+
+/* ── MARKDOWN MODAL ───────────────────────────────────── */
+#modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+  z-index: 500; align-items: center; justify-content: center;
+  padding: 24px;
+}
+#modal-overlay.open { display: flex; }
+
+#modal-box {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-bright);
+  border-radius: 12px;
+  width: 100%; max-width: 760px;
+  max-height: calc(100vh - 48px);
+  display: flex; flex-direction: column;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px var(--accent-glow);
+  overflow: hidden;
+  animation: modal-in 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+#modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.modal-title-row { display: flex; align-items: center; gap: 10px; }
+#modal-doc-title {
+  font-size: 13px; font-weight: 700; color: var(--text-primary);
+}
+#modal-doc-tag {
+  font-size: 9px; font-family: var(--font-mono); letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--accent); background: var(--accent-dim);
+  border: 1px solid var(--border-bright); padding: 2px 8px; border-radius: 100px;
+}
+#modal-close {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text-muted); border-radius: 4px; width: 26px; height: 26px;
+  cursor: pointer; font-size: 13px; transition: var(--transition);
+  display: flex; align-items: center; justify-content: center;
+}
+#modal-close:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-bright); }
+
+#modal-body {
+  flex: 1; overflow-y: auto; padding: 24px 28px;
+  font-size: 13px; line-height: 1.75; color: var(--text-secondary);
+}
+
+/* Markdown Styles inside modal */
+#modal-body h1 { font-size: 20px; color: var(--text-primary); margin: 0 0 16px; font-weight: 700; }
+#modal-body h2 { font-size: 15px; color: var(--accent); margin: 28px 0 10px; font-weight: 700; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+#modal-body h3 { font-size: 13px; color: var(--text-primary); margin: 18px 0 8px; font-weight: 600; }
+#modal-body p { margin-bottom: 10px; }
+#modal-body ul, #modal-body ol { padding-left: 20px; margin-bottom: 12px; }
+#modal-body li { margin-bottom: 4px; }
+#modal-body code {
+  font-family: var(--font-mono); font-size: 11.5px;
+  background: var(--bg-editor); border: 1px solid var(--border);
+  padding: 1px 6px; border-radius: 3px; color: var(--cyan);
+}
+#modal-body pre {
+  background: var(--bg-editor); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px; margin: 12px 0;
+  overflow-x: auto;
+}
+#modal-body pre code {
+  background: none; border: none; padding: 0;
+  font-size: 12px; color: var(--text-primary);
+  display: block; line-height: 1.7;
+}
+#modal-body strong { color: var(--text-primary); font-weight: 600; }
+#modal-body em { color: var(--yellow); font-style: italic; }
+#modal-body table {
+  width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px;
+}
+#modal-body th {
+  background: var(--bg-editor); border: 1px solid var(--border);
+  padding: 6px 10px; text-align: left; color: var(--accent); font-family: var(--font-mono);
+  font-size: 11px; letter-spacing: 0.5px;
+}
+#modal-body td {
+  border: 1px solid var(--border); padding: 6px 10px; color: var(--text-secondary);
+}
+#modal-body tr:nth-child(even) td { background: rgba(148,163,184,0.03); }
+#modal-body blockquote {
+  border-left: 3px solid var(--accent); padding-left: 14px;
+  color: var(--text-muted); font-style: italic; margin: 12px 0;
+}
+#modal-body a { color: var(--accent); text-decoration: none; }
+#modal-body a:hover { text-decoration: underline; }
+#modal-body hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+#modal-loading {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 40px;
+  font-size: 12px; font-family: var(--font-mono); color: var(--text-muted);
+}
+.spinner {
+  width: 16px; height: 16px; border: 2px solid var(--border);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── RESPONSIVE ───────────────────────────────────────── */
+@media (max-width: 640px) {
+  #hero { padding: 56px 16px 48px; }
+  .tools-grid { grid-template-columns: 1fr; }
+  .section { padding-left: 16px; padding-right: 16px; }
+  footer { flex-direction: column; align-items: flex-start; }
+  .title-center { display: none; }
+}
 </style>
 </head>
 <body>
 
-<!-- TITLE BAR -->
+<!-- TITLEBAR -->
 <div id="titlebar">
-  <div class="logo">
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M8 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9l-6-6z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-      <path d="M8 3v6h8" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-      <path d="M8 13l2 2-2 2M12 17h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <a class="logo" href="#">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2 L22 12 L12 22 L2 12 Z"/>
     </svg>
-    CIE Pseudocode IDE
-  </div>
-  <div class="title-center" id="title-filename">main.pseudo</div>
+    CIE CompSci Lab
+  </a>
+  <div class="title-center">IGCSE Computer Science — Interactive Study Tools</div>
   <div class="title-actions">
-    <button class="title-btn" onclick="downloadCode()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-      Export .txt
-    </button>
-    <button class="title-btn accent" onclick="runCode()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      Run
-    </button>
+    <a class="title-btn" href="pseudocode.html">Pseudocode ↗</a>
+    <a class="title-btn" href="logic-gates.html">Logic Gates ↗</a>
+    <a class="title-btn" href="flowcharts.html">Flowcharts ↗</a>
+    <button class="title-btn" id="btn-theme">⏾</button>
   </div>
 </div>
 
-<!-- MAIN -->
-<div id="main-content">
-  <!-- ACTIVITY BAR -->
-  <div id="activity-bar">
-    <button class="activity-btn active" onclick="switchSidebar('snippets')" id="ab-snippets" title="Snippets">
-      <span class="tooltip">Snippets</span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    </button>
-    <button class="activity-btn" onclick="switchSidebar('files')" id="ab-files" title="Files">
-      <span class="tooltip">Files</span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
-    </button>
-    <button class="activity-btn" onclick="switchSidebar('settings')" id="ab-settings" title="Settings">
-      <span class="tooltip">Settings</span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-    </button>
-  </div>
+<!-- PAGE -->
+<div id="page">
 
-  <!-- SIDEBAR PANEL -->
-  <div id="sidebar-panel">
-    <!-- SNIPPETS -->
-    <div id="panel-snippets">
-      <div class="sidebar-header">Code Snippets</div>
-      <div class="sidebar-content" id="snippets-list"></div>
-    </div>
-    <!-- FILES -->
-    <div id="panel-files" style="display:none">
-      <div class="sidebar-header">Workspace</div>
-      <div class="sidebar-content">
-        <div class="snippet-category">Open Files</div>
-        <div id="sidebar-file-list"></div>
-        <div class="snippet-category" style="margin-top:12px">Actions</div>
-        <div class="snippet-item" onclick="newFile()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          New File
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-inner">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Cambridge IGCSE™ &amp; O Level · Syllabus 2023–2028
+      </div>
+      <div class="hero-logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2 L22 12 L12 22 L2 12 Z"/>
+          <path d="M12 7 L17 12 L12 17 L7 12 Z" stroke-width="1"/>
+        </svg>
+      </div>
+      <h1 class="hero-title">IGCSE <span>CompSci</span> Lab</h1>
+      <p class="hero-sub">An interactive toolkit for Cambridge Computer Science students — write &amp; run pseudocode, simulate logic circuits, and build flowcharts, all in your browser.</p>
+      <div class="hero-meta">
+        <div class="hero-meta-item">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          Pseudocode IDE
         </div>
-        <div class="snippet-item" onclick="downloadCode()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-          Download .txt
+        <div class="hero-meta-divider"></div>
+        <div class="hero-meta-item">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><line x1="7" y1="12" x2="14" y2="8"/><line x1="7" y1="12" x2="14" y2="16"/></svg>
+          Logic Gates
         </div>
-        <div class="snippet-item" onclick="clearCode()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-          Clear Editor
+        <div class="hero-meta-divider"></div>
+        <div class="hero-meta-item">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="5" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="8" y="16" width="8" height="5" rx="1"/><line x1="6" y1="8" x2="6" y2="11"/><line x1="18" y1="8" x2="18" y2="11"/><line x1="6" y1="11" x2="18" y2="11"/><line x1="12" y1="11" x2="12" y2="16"/></svg>
+          Flowcharts
         </div>
       </div>
     </div>
-    <!-- SETTINGS -->
-    <div id="panel-settings" style="display:none">
-      <div class="sidebar-header">Settings</div>
-      <div class="sidebar-content">
-        <div class="settings-item">
-          <label>Font Size</label>
-          <select class="settings-select" onchange="changeFontSize(this.value)">
-            <option value="12">12px</option>
-            <option value="13" selected>13px</option>
-            <option value="14">14px</option>
-            <option value="15">15px</option>
-            <option value="16">16px</option>
-          </select>
-        </div>
-        <div class="settings-item">
-          <label>Auto-Save</label>
-          <label class="toggle"><input type="checkbox" id="auto-save-toggle" checked onchange="toggleAutoSave(this.checked)"><span class="slider"></span></label>
-        </div>
-        <div class="settings-item">
-          <label>Linter</label>
-          <label class="toggle"><input type="checkbox" id="linter-toggle" checked onchange="toggleLinter(this.checked)"><span class="slider"></span></label>
-        </div>
-        <div class="settings-item">
-          <label>Line Numbers</label>
-          <label class="toggle"><input type="checkbox" id="ln-toggle" checked onchange="toggleLineNumbers(this.checked)"><span class="slider"></span></label>
-        </div>
-        <div class="snippet-category" style="margin-top:12px">About</div>
-        <div style="font-size:11px;color:var(--text-muted);padding:4px 4px;line-height:1.8;">
-          CIE Pseudocode IDE<br>
-          Cambridge IGCSE™ / O Level<br>
-          Computer Science<br>
-          <span style="color:var(--accent)">Syllabus 2023–2028</span>
-        </div>
-      </div>
-    </div>
-  </div>
+  </section>
 
-  <!-- EDITOR AREA -->
-  <div id="editor-area">
-    <div id="editor-tabs">
-      <div class="editor-tab active">
-        <span class="tab-dot"></span>
-        <span id="tab-filename">main.pseudo</span>
-      </div>
-    </div>
-    <div id="editor-container">
-      <div id="editor-inner">
-        <div id="line-numbers"></div>
-        <textarea id="code-input" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="// Write your CIE pseudocode here..."></textarea>
-        <div id="code-highlight" aria-hidden="true"></div>
-      </div>
-    </div>
-    <div id="status-bar">
-      <div class="status-item accent">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
-        CIE Pseudocode
-      </div>
-      <div class="status-item" id="cursor-pos">Ln 1, Col 1</div>
-      <div class="status-item" id="linter-badge"></div>
-      <div style="flex:1"></div>
-      <div class="status-item" id="char-count">0 chars</div>
-    </div>
-  </div>
+  <!-- TOOL CARDS -->
+  <div class="section" id="tools">
+    <div class="section-label">Interactive Tools</div>
+    <div class="section-title">Pick a tool to get started</div>
+    <p class="section-sub">Each tool is standalone — no installation, no sign-in. Open the syntax guide anytime with the Docs button.</p>
 
-  <!-- RIGHT PANEL -->
-  <div id="right-panel">
-    <div id="right-tabs">
-      <div class="right-tab active" onclick="switchRightTab('console')" id="rt-console">Console</div>
-      <div class="right-tab" onclick="switchRightTab('trace')" id="rt-trace">Trace Table</div>
-    </div>
-    <div id="right-content">
-      <!-- CONSOLE -->
-      <div class="right-pane active" id="pane-console">
-        <div id="console-output">
-          <div class="console-welcome">
-            <div class="welcome-title">// CIE Pseudocode IDE ready</div>
-            <div>// Press RUN or Ctrl+Enter to execute</div>
-            <div>// INPUT will prompt for values</div>
+    <div class="tools-grid">
+
+      <!-- Pseudocode -->
+      <div class="tool-card" style="--card-glow:rgba(167,139,250,0.08)">
+        <div class="card-header">
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9l-6-6z"/>
+              <path d="M8 3v6h8"/>
+              <path d="M8 13l2 2-2 2M12 17h4"/>
+            </svg>
+          </div>
+          <div>
+            <div class="card-title">Pseudocode IDE</div>
+            <div class="card-tag">Write · Run · Debug</div>
           </div>
         </div>
-        <div id="input-form">
-          <span id="input-prompt-label">INPUT &gt;</span>
-          <input id="input-field" type="text" autocomplete="off" spellcheck="false">
-          <button id="input-submit">Enter</button>
+        <p class="card-desc">A full-featured pseudocode editor with syntax highlighting, a live console, step-through debugger, variable trace table, and CIE-spec linter. Supports all Cambridge pseudocode constructs.</p>
+        <div class="card-features">
+          <span class="card-feat">Syntax Highlighting</span>
+          <span class="card-feat">Step Debugger</span>
+          <span class="card-feat">Trace Table</span>
+          <span class="card-feat">Linter</span>
+          <span class="card-feat">Multi-file</span>
+        </div>
+        <div class="card-actions">
+          <a class="btn-launch" href="pseudocode.html">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Open IDE
+          </a>
+          <button class="btn-docs" data-doc="pseudocode" data-title="Pseudocode Syntax Guide">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Docs
+          </button>
         </div>
       </div>
-      <!-- TRACE TABLE -->
-      <div class="right-pane" id="pane-trace">
-        <div id="trace-container">
-          <div class="trace-hint">Run your code to populate the trace table.</div>
+
+      <!-- Logic Gates -->
+      <div class="tool-card" style="--card-glow:rgba(103,232,249,0.06)">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(103,232,249,0.1);border-color:rgba(103,232,249,0.2)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 5 L17 12 L3 19 Z"/>
+              <circle cx="20" cy="12" r="2.5"/>
+            </svg>
+          </div>
+          <div>
+            <div class="card-title">Logic Gates</div>
+            <div class="card-tag">Build · Simulate · Analyse</div>
+          </div>
+        </div>
+        <p class="card-desc">Drag-and-drop logic gate simulator. Wire up AND, OR, NOT, NAND, NOR, XOR gates with inputs &amp; outputs. Generates truth tables and Boolean expressions automatically.</p>
+        <div class="card-features">
+          <span class="card-feat">6 Gate Types</span>
+          <span class="card-feat">Truth Table</span>
+          <span class="card-feat">Boolean Expr</span>
+          <span class="card-feat">Live Sim</span>
+          <span class="card-feat">Export PNG</span>
+        </div>
+        <div class="card-actions">
+          <a class="btn-launch" href="logic-gates.html" style="background:var(--cyan);color:#0d0d12">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Open Simulator
+          </a>
+          <button class="btn-docs" data-doc="logic-gates" data-title="Logic Gates Reference">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Docs
+          </button>
         </div>
       </div>
-    </div>
-    <div id="action-bar">
-      <button class="action-btn" id="btn-run" onclick="runCode()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        RUN
-      </button>
-      <button class="action-btn" id="btn-step" onclick="stepCode()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-        STEP
-      </button>
-      <button class="action-btn" id="btn-reset" onclick="resetExecution()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 101.5-5M3 3v6h6"/></svg>
-        RESET
-      </button>
+
+      <!-- Flowcharts -->
+      <div class="tool-card" style="--card-glow:rgba(34,197,94,0.06)">
+        <div class="card-header">
+          <div class="card-icon" style="background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.2)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="4" rx="1"/>
+              <rect x="14" y="3" width="7" height="4" rx="1"/>
+              <rect x="8" y="17" width="8" height="4" rx="1"/>
+              <line x1="6" y1="7" x2="6" y2="10"/><line x1="18" y1="7" x2="18" y2="10"/>
+              <line x1="6" y1="10" x2="18" y2="10"/><line x1="12" y1="10" x2="12" y2="17"/>
+            </svg>
+          </div>
+          <div>
+            <div class="card-title">Flowchart Lab</div>
+            <div class="card-tag">Design · Generate · Run</div>
+          </div>
+        </div>
+        <p class="card-desc">Visual flowchart and structure diagram builder. Drag shapes, connect nodes, and auto-generate pseudocode from your diagram. Includes a simulator that runs directly from the flowchart.</p>
+        <div class="card-features">
+          <span class="card-feat">Auto Pseudocode</span>
+          <span class="card-feat">Structure Diagrams</span>
+          <span class="card-feat">Simulator</span>
+          <span class="card-feat">Trace Table</span>
+          <span class="card-feat">B&amp;W Export</span>
+        </div>
+        <div class="card-actions">
+          <a class="btn-launch" href="flowcharts.html" style="background:var(--green);color:#0d0d12">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Open Lab
+          </a>
+          <button class="btn-docs" data-doc="flowcharts" data-title="Flowcharts Reference">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Docs
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
-</div>
 
-<!-- INPUT MODAL -->
-<div id="input-modal-overlay">
-  <div id="input-modal">
-    <h3>INPUT Required</h3>
-    <p id="modal-var-name">Enter value for: <span id="modal-var"></span></p>
-    <input id="modal-input" type="text" autocomplete="off" spellcheck="false" placeholder="Type your value...">
-    <button id="modal-submit">Submit</button>
+  <!-- ABOUT -->
+  <div class="section" id="about">
+    <div class="section-label">About</div>
+    <div class="section-title">What is IGCSE Computer Science?</div>
+    <p class="section-sub">Cambridge IGCSE &amp; O Level Computer Science (0478 / 2210) — Syllabus 2023–2028</p>
+
+    <div class="about-grid">
+      <div class="about-card">
+        <div class="about-card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Overview
+        </div>
+        <p>Cambridge IGCSE Computer Science introduces students to the principles of programming, problem-solving, and computational thinking. It prepares learners for further study in computing and related fields.</p>
+        <p>The course is examined at Cambridge International Examinations and is widely recognised by universities worldwide as evidence of strong analytical and technical ability.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          Topics Covered by This Lab
+        </div>
+        <ul class="syllabus-list">
+          <li><span class="syl-dot"></span><span><strong>Pseudocode</strong> — Cambridge-standard pseudocode: variables, loops, conditionals, procedures, functions, arrays, file handling.</span></li>
+          <li><span class="syl-dot"></span><span><strong>Logic Gates</strong> — AND, OR, NOT, NAND, NOR, XOR; truth tables; Boolean expressions.</span></li>
+          <li><span class="syl-dot"></span><span><strong>Flowcharts</strong> — START/STOP, INPUT/OUTPUT, PROCESS, DECISION shapes; structure diagrams for modular design.</span></li>
+        </ul>
+      </div>
+      <div class="about-card">
+        <div class="about-card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Exam Tips
+        </div>
+        <ul class="syllabus-list">
+          <li><span class="syl-dot"></span><span>Always use the <strong>exact Cambridge keywords</strong> in pseudocode: <code>INPUT</code>, <code>OUTPUT</code>, <code>FOR … TO … NEXT</code>, <code>WHILE … DO … ENDWHILE</code>.</span></li>
+          <li><span class="syl-dot"></span><span>Flowchart shapes must match their function — use a <strong>diamond</strong> for decisions, a <strong>parallelogram</strong> for I/O, and <strong>rounded rectangles</strong> for start/stop.</span></li>
+          <li><span class="syl-dot"></span><span>In logic questions, always show your working using a <strong>truth table</strong> before writing the Boolean expression.</span></li>
+        </ul>
+      </div>
+      <div class="about-card">
+        <div class="about-card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          Who is this for?
+        </div>
+        <p>This lab is designed for students studying Cambridge IGCSE or O Level Computer Science (syllabuses 0478 &amp; 2210). It is also useful for AS Level students revisiting foundational topics.</p>
+        <p>All tools run entirely in the browser — no accounts, no installs. Works on desktop and tablet.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-left">
+      <div class="logo-sm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2 L22 12 L12 22 L2 12 Z"/></svg>
+        CIE CompSci Lab
+      </div>
+      <span class="footer-sep">·</span>
+      <span>Cambridge IGCSE Computer Science</span>
+    </div>
+    <div class="footer-right">
+      <span class="footer-tag">Syllabus 0478 / 2210 &nbsp;·&nbsp; 2023–2028</span>
+      <a class="footer-link" href="https://github.com/its-idhem/IGCSE-CompSci-Lab" target="_blank" rel="noopener">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.741 0 .267.18.578.688.48C19.138 20.161 22 16.416 22 12c0-5.523-4.477-10-10-10z"/></svg>
+        its-idhem
+      </a>
+    </div>
+  </footer>
+
+</div><!-- end #page -->
+
+<!-- DOCS MODAL -->
+<div id="modal-overlay">
+  <div id="modal-box">
+    <div id="modal-header">
+      <div class="modal-title-row">
+        <span id="modal-doc-title">Documentation</span>
+        <span id="modal-doc-tag">REFERENCE</span>
+      </div>
+      <button id="modal-close">✕</button>
+    </div>
+    <div id="modal-body">
+      <div id="modal-loading">
+        <div class="spinner"></div>
+        Loading documentation…
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-// ============================================================
-//  SNIPPETS DATA
-// ============================================================
-const SNIPPETS = [
-  {
-    category: 'Algorithms',
-    items: [
-      { name: 'Linear Search', icon: 'search', code: `DECLARE Numbers : ARRAY[1:10] OF INTEGER
-DECLARE Target : INTEGER
-DECLARE Found : BOOLEAN
-DECLARE Index : INTEGER
-DECLARE FoundAt : INTEGER
+/* ── THEME TOGGLE ─────────────────────────────────────── */
+const themeBtn = document.getElementById('btn-theme');
+const savedTheme = localStorage.getItem('cie-theme');
+if (savedTheme === 'light') document.body.classList.add('light-mode');
 
-// Fill the array with 10 values
-FOR Index ← 1 TO 10
-   OUTPUT "Enter value for position ", Index
-   INPUT Numbers[Index]
-NEXT Index
-
-Found ← FALSE
-FoundAt ← -1
-
-OUTPUT "Enter the number to search for:"
-INPUT Target
-
-FOR Index ← 1 TO 10
-   IF Numbers[Index] = Target THEN
-      Found ← TRUE
-      FoundAt ← Index
-   ENDIF
-NEXT Index
-
-IF Found = TRUE THEN
-   OUTPUT "Found at index: ", FoundAt
-ELSE
-   OUTPUT "Not found"
-ENDIF` },
-      { name: 'Bubble Sort', icon: 'sort', code: `DECLARE Arr : ARRAY[1:10] OF INTEGER
-DECLARE i : INTEGER
-DECLARE j : INTEGER
-DECLARE Temp : INTEGER
-DECLARE Swapped : BOOLEAN
-
-// Fill the array with 10 values
-FOR i ← 1 TO 10
-   OUTPUT "Enter value for position ", i
-   INPUT Arr[i]
-NEXT i
-
-// Sort
-FOR i ← 1 TO 9
-   Swapped ← FALSE
-   FOR j ← 1 TO (10 - i)
-      IF Arr[j] > Arr[j + 1] THEN
-         Temp ← Arr[j]
-         Arr[j] ← Arr[j + 1]
-         Arr[j + 1] ← Temp
-         Swapped ← TRUE
-      ENDIF
-   NEXT j
-   IF Swapped = FALSE THEN
-      // Array already sorted, exit early
-   ENDIF
-NEXT i
-
-// Output sorted array
-OUTPUT "Sorted array:"
-FOR i ← 1 TO 10
-   OUTPUT Arr[i]
-NEXT i` },
-      { name: 'Totaling / Average', icon: 'sum', code: `DECLARE Total : REAL
-DECLARE Count : INTEGER
-DECLARE Average : REAL
-DECLARE Value : REAL
-
-Total ← 0.0
-Count ← 0
-
-REPEAT
-   INPUT Value
-   IF Value <> -1 THEN
-      Total ← Total + Value
-      Count ← Count + 1
-   ENDIF
-UNTIL Value = -1
-
-IF Count > 0 THEN
-   Average ← Total / Count
-   OUTPUT "Total: ", Total
-   OUTPUT "Count: ", Count
-   OUTPUT "Average: ", Average
-ELSE
-   OUTPUT "No values entered"
-ENDIF` },
-      { name: 'Find Max / Min', icon: 'minmax', code: `DECLARE Numbers : ARRAY[1:5] OF REAL
-DECLARE Max : REAL
-DECLARE Min : REAL
-DECLARE i : INTEGER
-
-Numbers[1] ← 4.5
-Numbers[2] ← 7.2
-Numbers[3] ← 1.3
-Numbers[4] ← 9.8
-Numbers[5] ← 3.1
-
-Max ← Numbers[1]
-Min ← Numbers[1]
-
-FOR i ← 2 TO 5
-   IF Numbers[i] > Max THEN
-      Max ← Numbers[i]
-   ENDIF
-   IF Numbers[i] < Min THEN
-      Min ← Numbers[i]
-   ENDIF
-NEXT i
-
-OUTPUT "Maximum: ", Max
-OUTPUT "Minimum: ", Min` },
-    ]
-  },
-  {
-    category: 'Structures',
-    items: [
-      { name: 'FOR Loop', icon: 'loop', code: `FOR Index ← 1 TO 10
-   OUTPUT Index
-NEXT Index` },
-      { name: 'WHILE Loop', icon: 'loop', code: `DECLARE Count : INTEGER
-Count ← 0
-WHILE Count < 10 DO
-   Count ← Count + 1
-   OUTPUT Count
-ENDWHILE` },
-      { name: 'REPEAT Loop', icon: 'loop', code: `DECLARE Password : STRING
-REPEAT
-   OUTPUT "Enter password:"
-   INPUT Password
-UNTIL Password = "Secret"
-OUTPUT "Access granted"` },
-      { name: 'IF / ELSE', icon: 'branch', code: `DECLARE Score : INTEGER
-INPUT Score
-
-IF Score >= 70 THEN
-   OUTPUT "Grade A"
-ELSE
-   IF Score >= 50 THEN
-      OUTPUT "Grade B"
-   ELSE
-      OUTPUT "Fail"
-   ENDIF
-ENDIF` },
-      { name: 'CASE Statement', icon: 'branch', code: `DECLARE Choice : CHAR
-INPUT Choice
-
-CASE OF Choice
-   'A' : OUTPUT "Option A selected"
-   'B' : OUTPUT "Option B selected"
-   'C' : OUTPUT "Option C selected"
-   OTHERWISE : OUTPUT "Invalid option"
-ENDCASE` },
-      { name: 'PROCEDURE', icon: 'fn', code: `PROCEDURE Greet(Name : STRING)
-   OUTPUT "Hello, ", Name
-ENDPROCEDURE
-
-CALL Greet("World")` },
-      { name: 'FUNCTION', icon: 'fn', code: `FUNCTION Square(N : INTEGER) RETURNS INTEGER
-   RETURN N * N
-ENDFUNCTION
-
-DECLARE Result : INTEGER
-Result ← Square(5)
-OUTPUT "5 squared = ", Result` },
-      { name: '1D Array', icon: 'arr', code: `DECLARE Scores : ARRAY[1:5] OF INTEGER
-DECLARE i : INTEGER
-
-FOR i ← 1 TO 5
-   INPUT Scores[i]
-NEXT i
-
-FOR i ← 1 TO 5
-   OUTPUT Scores[i]
-NEXT i` },
-      { name: 'File Read', icon: 'file', code: `DECLARE Line : STRING
-
-OPENFILE "data.txt" FOR READ
-
-WHILE NOT EOF("data.txt") DO
-   READFILE "data.txt", Line
-   OUTPUT Line
-ENDWHILE
-
-CLOSEFILE "data.txt"` },
-    ]
-  }
-];
-
-// ============================================================
-//  SYNTAX HIGHLIGHTING
-// ============================================================
-const KEYWORDS = ['DECLARE','CONSTANT','ARRAY','OF','INPUT','OUTPUT','IF','THEN','ELSE','ENDIF',
-  'FOR','TO','STEP','NEXT','WHILE','DO','ENDWHILE','REPEAT','UNTIL','CASE','OF','ENDCASE',
-  'OTHERWISE','PROCEDURE','ENDPROCEDURE','CALL','FUNCTION','ENDFUNCTION','RETURNS','RETURN',
-  'BYVAL','BYREF','TYPE','ENDTYPE','CLASS','ENDCLASS','INHERITS','SUPER','NEW','PUBLIC','PRIVATE',
-  'OPENFILE','CLOSEFILE','READFILE','WRITEFILE','SEEK','GETRECORD','PUTRECORD','FOR','NOT','AND','OR',
-  'DEFINE','SET','DIV','MOD','APPEND','READ','WRITE','RANDOM'];
-
-const TYPES = ['INTEGER','REAL','CHAR','STRING','BOOLEAN','DATE'];
-const BOOLS = ['TRUE','FALSE'];
-const BUILTINS = ['LENGTH','LCASE','UCASE','MID','RIGHT','INT','RAND','ROUND','SUBSTRING','EOF'];
-
-function highlight(code) {
-  const lines = code.split('\n');
-  return lines.map(line => highlightLine(line)).join('\n');
-}
-
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function highlightLine(line) {
-  // Comments
-  const commentIdx = line.indexOf('//');
-  let code = line, comment = '';
-  if (commentIdx !== -1) {
-    comment = line.slice(commentIdx);
-    code = line.slice(0, commentIdx);
-  }
-
-  let result = '';
-  let i = 0;
-  const tokens = tokenizeLine(code);
-  for (const tok of tokens) {
-    result += colorToken(tok);
-  }
-
-  if (comment) result += `<span class="comment">${escHtml(comment)}</span>`;
-  return result;
-}
-
-function tokenizeLine(code) {
-  const tokens = [];
-  let i = 0;
-  while (i < code.length) {
-    // String
-    if (code[i] === '"') {
-      let j = i + 1;
-      while (j < code.length && code[j] !== '"') j++;
-      tokens.push({ type: 'string', val: code.slice(i, j+1) });
-      i = j + 1;
-      continue;
-    }
-    // Char literal
-    if (code[i] === "'") {
-      let j = i + 1;
-      while (j < code.length && code[j] !== "'") j++;
-      tokens.push({ type: 'string', val: code.slice(i, j+1) });
-      i = j + 1;
-      continue;
-    }
-    // Arrow
-    if (code[i] === '←' || (code[i] === '<' && code[i+1] === '-')) {
-      const len = code[i] === '←' ? 1 : 2;
-      tokens.push({ type: 'arrow', val: code.slice(i, i+len) });
-      i += len;
-      continue;
-    }
-    // Operators
-    if ('<>+-*/^='.includes(code[i])) {
-      let j = i + 1;
-      if ((code[i] === '<' && (code[i+1] === '=' || code[i+1] === '>')) ||
-          (code[i] === '>' && code[i+1] === '=')) j = i + 2;
-      tokens.push({ type: 'op', val: code.slice(i, j) });
-      i = j;
-      continue;
-    }
-    // Number
-    if (/\d/.test(code[i]) || (code[i] === '-' && /\d/.test(code[i+1]||''))) {
-      let j = i + 1;
-      while (j < code.length && /[\d.]/.test(code[j])) j++;
-      tokens.push({ type: 'number', val: code.slice(i, j) });
-      i = j;
-      continue;
-    }
-    // Word
-    if (/[A-Za-z_]/.test(code[i])) {
-      let j = i + 1;
-      while (j < code.length && /[A-Za-z0-9_]/.test(code[j])) j++;
-      const word = code.slice(i, j);
-      if (KEYWORDS.includes(word.toUpperCase())) tokens.push({ type: 'keyword', val: word });
-      else if (TYPES.includes(word.toUpperCase())) tokens.push({ type: 'type', val: word });
-      else if (BOOLS.includes(word.toUpperCase())) tokens.push({ type: 'bool', val: word });
-      else if (BUILTINS.includes(word.toUpperCase())) tokens.push({ type: 'builtin', val: word });
-      else tokens.push({ type: 'ident', val: word });
-      i = j;
-      continue;
-    }
-    tokens.push({ type: 'punc', val: code[i] });
-    i++;
-  }
-  return tokens;
-}
-
-function colorToken(tok) {
-  const e = escHtml(tok.val);
-  switch (tok.type) {
-    case 'keyword': return `<span class="kw">${e}</span>`;
-    case 'type': return `<span class="type">${e}</span>`;
-    case 'bool': return `<span class="bool">${e}</span>`;
-    case 'string': return `<span class="str">${e}</span>`;
-    case 'number': return `<span class="num">${e}</span>`;
-    case 'op': return `<span class="op">${e}</span>`;
-    case 'arrow': return `<span class="arrow">${e}</span>`;
-    case 'builtin': return `<span class="fn">${e}</span>`;
-    case 'punc': return `<span class="punc">${e}</span>`;
-    default: return `<span class="ident">${e}</span>`;
-  }
-}
-
-// ============================================================
-//  EDITOR SETUP
-// ============================================================
-const codeInput = document.getElementById('code-input');
-const codeHighlight = document.getElementById('code-highlight');
-const lineNumbers = document.getElementById('line-numbers');
-
-let autoSaveEnabled = true;
-let linterEnabled = true;
-let lineNumbersEnabled = true;
-let currentSidebarPanel = 'snippets';
-
-function updateEditor() {
-  const code = codeInput.value;
-  codeHighlight.innerHTML = highlight(code) + '\n';
-  updateLineNumbers(code);
-  updateStatusBar(code);
-  if (linterEnabled) runLinter(code);
-  if (autoSaveEnabled) {
-    clearTimeout(window._saveTimer);
-    window._saveTimer = setTimeout(() => {
-      localStorage.setItem('cie_code', code);
-    }, 500);
-  }
-  syncScroll();
-}
-
-function updateLineNumbers(code) {
-  if (!lineNumbersEnabled) { lineNumbers.innerHTML = ''; return; }
-  const lines = code.split('\n');
-  const activeLine = getActiveLine();
-  lineNumbers.innerHTML = lines.map((_, i) => {
-    const n = i + 1;
-    const cls = n === activeLine ? 'active-line' : '';
-    return `<span class="${cls}">${n}</span>`;
-  }).join('');
-}
-
-function getActiveLine() {
-  const val = codeInput.value.slice(0, codeInput.selectionStart);
-  return val.split('\n').length;
-}
-
-function syncScroll() {
-  codeHighlight.scrollTop = codeInput.scrollTop;
-  codeHighlight.scrollLeft = codeInput.scrollLeft;
-  lineNumbers.scrollTop = codeInput.scrollTop;
-}
-
-function updateStatusBar(code) {
-  const lines = code.split('\n');
-  const pos = codeInput.selectionStart;
-  const before = code.slice(0, pos);
-  const ln = before.split('\n').length;
-  const col = before.split('\n').pop().length + 1;
-  document.getElementById('cursor-pos').textContent = `Ln ${ln}, Col ${col}`;
-  document.getElementById('char-count').textContent = `${code.length} chars`;
-}
-
-// Linter
-let lintErrors = [];
-function runLinter(code) {
-  const errors = [];
-  const lines = code.split('\n');
-  lines.forEach((line, idx) => {
-    const stripped = line.replace(/"[^"]*"/g, '""').replace(/'[^']*'/g, "''");
-    const commentIdx = stripped.indexOf('//');
-    const codePart = commentIdx === -1 ? stripped : stripped.slice(0, commentIdx);
-    
-    // Check = used as assignment (not in condition context)
-    if (/^\s*(DECLARE\s+)?\w+\s*=\s*[^=]/.test(codePart) && !/^\s*(CONSTANT|IF|WHILE|UNTIL|CASE|REPEAT)/.test(codePart.trim())) {
-      if (!/<=|>=|<>/.test(codePart) && !codePart.trim().startsWith('//')) {
-        errors.push({ line: idx + 1, msg: `Use '←' for assignment, not '='`, type: 'warn' });
-      }
-    }
-    // Unclosed string
-    const strMatch = codePart.match(/"/g);
-    if (strMatch && strMatch.length % 2 !== 0) {
-      errors.push({ line: idx + 1, msg: 'Unclosed string literal', type: 'error' });
-    }
-  });
-  
-  lintErrors = errors;
-  const badge = document.getElementById('linter-badge');
-  if (errors.length === 0) {
-    badge.className = 'status-item ok';
-    badge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> No issues`;
-  } else {
-    const errs = errors.filter(e => e.type === 'error').length;
-    const warns = errors.filter(e => e.type === 'warn').length;
-    badge.className = errs > 0 ? 'status-item err' : 'status-item warn';
-    badge.innerHTML = errs > 0 ?
-      `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ${errs} error${errs>1?'s':''}, ${warns} warning${warns!==1?'s':''}` :
-      `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ${warns} warning${warns!==1?'s':''}`;
-  }
-}
-
-codeInput.addEventListener('input', updateEditor);
-codeInput.addEventListener('scroll', syncScroll);
-codeInput.addEventListener('keydown', e => {
-  // Tab = 2 spaces
-  if (e.key === 'Tab') {
-    e.preventDefault();
-    const s = codeInput.selectionStart, en = codeInput.selectionEnd;
-    codeInput.value = codeInput.value.slice(0, s) + '   ' + codeInput.value.slice(en);
-    codeInput.selectionStart = codeInput.selectionEnd = s + 3;
-    updateEditor();
-  }
-  // Ctrl+Enter = Run
-  if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); runCode(); }
-  updateEditor();
+themeBtn.addEventListener('click', () => {
+  document.body.classList.toggle('light-mode');
+  localStorage.setItem('cie-theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
 });
-codeInput.addEventListener('click', updateEditor);
-codeInput.addEventListener('keyup', updateEditor);
 
-// ============================================================
-//  INTERPRETER  v4  – all bugs fixed
-// ============================================================
+/* ── DOCS MODAL ───────────────────────────────────────── */
+const overlay     = document.getElementById('modal-overlay');
+const modalBody   = document.getElementById('modal-body');
+const modalTitle  = document.getElementById('modal-doc-title');
+const modalTag    = document.getElementById('modal-doc-tag');
+const closeBtn    = document.getElementById('modal-close');
+
+const DOC_PATHS = {
+  'pseudocode':  '../assets/docs/pseudocode.md',
+  'logic-gates': '../assets/docs/logic-gates.md',
+  'flowcharts':  '../assets/docs/flowcharts.md',
+};
+
+async function openDoc(docKey, title) {
+  modalTitle.textContent = title;
+  modalTag.textContent   = docKey.toUpperCase();
+  modalBody.innerHTML    = '<div id="modal-loading"><div class="spinner"></div>Loading documentation…</div>';
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
 
-const UNINITIALIZED = Symbol('UNINITIALIZED');
-
-// Runtime state
-let interpEnv        = {};
-let interpTraceRows  = [];
-let interpProcedures = {};
-let interpFunctions  = {};
-let declaredTypes    = {};   // varName → 'INTEGER' | 'REAL' | 'CHAR' | 'STRING' | 'BOOLEAN'
-let isRunning        = false;
-
-// Step-mode
-let interpStepMode = false;
-let stepResolve    = null;
-
-// Multi-file tabs
-let files        = [];
-let activeFileId = 1;
-let nextFileId   = 2;
-
-// ── updateEditor override (multi-file save) ──────────────────
-// This redefinition supersedes the one in the editor-setup block above.
-function updateEditor() {
-  const code = codeInput.value;
-  codeHighlight.innerHTML = highlight(code) + '\n';
-  updateLineNumbers(code);
-  updateStatusBar(code);
-  if (linterEnabled) runLinter(code);
-  if (autoSaveEnabled) {
-    clearTimeout(window._saveTimer);
-    window._saveTimer = setTimeout(() => { saveCurrentFile(); }, 500);
-  }
-  syncScroll();
-}
-
-// ── Console ──────────────────────────────────────────────────
-function consoleLog(msg, cls = 'output') {
-  const el = document.createElement('div');
-  el.className = `console-line ${cls}`;
-  el.textContent = String(msg);           // textContent handles emoji fine
-  const out = document.getElementById('console-output');
-  out.appendChild(el);
-  out.scrollTop = out.scrollHeight;
-}
-function consoleClear() {
-  document.getElementById('console-output').innerHTML = '';
-}
-
-// ── INPUT modal ──────────────────────────────────────────────
-function requestInput(varName, typeName) {
-  return new Promise(resolve => {
-    const overlay  = document.getElementById('input-modal-overlay');
-    const modalVar = document.getElementById('modal-var');
-    const modalInp = document.getElementById('modal-input');
-    const submit   = document.getElementById('modal-submit');
-    modalVar.textContent = typeName ? `${varName} (${typeName})` : varName;
-    modalInp.value = '';
-    overlay.classList.add('visible');
-    modalInp.focus();
-    const doSubmit = () => {
-      const val = modalInp.value;
-      overlay.classList.remove('visible');
-      submit.removeEventListener('click', doSubmit);
-      modalInp.removeEventListener('keydown', kh);
-      consoleLog(`${varName} = ${val}`, 'input-line');
-      resolve(val);
-    };
-    const kh = e => { if (e.key === 'Enter') doSubmit(); };
-    submit.addEventListener('click', doSubmit);
-    modalInp.addEventListener('keydown', kh);
-  });
-}
-
-// ── Strip inline comments  (respects string literals) ────────
-// e.g.  x ← 5 // note  →  "x ← 5"
-// but   x ← "http://foo"  →  unchanged  (// is inside a string)
-function stripLineComment(s) {
-  let inStr = false, sc = '';
-  for (let i = 0; i < s.length; i++) {
-    const ch = s[i];
-    if (inStr) { if (ch === sc) inStr = false; continue; }
-    if (ch === '"' || ch === "'") { inStr = true; sc = ch; continue; }
-    if (ch === '/' && s[i + 1] === '/') return s.slice(0, i).trimEnd();
-  }
-  return s;
-}
-
-// ── Arrow normalisation  <- → ← ─────────────────────────────
-function normalizeArrows(s) {
-  let out = '', inStr = false, sc = '';
-  for (let i = 0; i < s.length; i++) {
-    const ch = s[i];
-    if (inStr) { out += ch; if (ch === sc) inStr = false; }
-    else if (ch === '"' || ch === "'") { inStr = true; sc = ch; out += ch; }
-    else if (ch === '<' && s[i + 1] === '-') { out += '\u2190'; i++; }
-    else out += ch;
-  }
-  return out;
-}
-
-function findArrowIdx(s) {
-  let inStr = false, sc = '';
-  for (let i = 0; i < s.length; i++) {
-    const ch = s[i];
-    if (inStr) { if (ch === sc) inStr = false; continue; }
-    if (ch === '"' || ch === "'") { inStr = true; sc = ch; continue; }
-    if (ch === '\u2190') return i;
-  }
-  return -1;
-}
-
-// ── Trace ────────────────────────────────────────────────────
-function traceVar(lineNum, name, val) {
-  interpTraceRows.push({ line: lineNum, type: 'var', variable: name, value: val });
-}
-function traceOutput(lineNum, val) {
-  interpTraceRows.push({ line: lineNum, type: 'output', value: val });
-}
-
-// ── Split helpers ────────────────────────────────────────────
-function splitArgs(s) {
-  const args = []; let depth = 0, cur = '', inStr = false, sc = '';
-  for (const ch of s) {
-    if (inStr) { cur += ch; if (ch === sc) inStr = false; continue; }
-    if (ch === '"' || ch === "'") { inStr = true; sc = ch; cur += ch; continue; }
-    if (ch === '(' || ch === '[') { depth++; cur += ch; continue; }
-    if (ch === ')' || ch === ']') { depth--; cur += ch; continue; }
-    if (ch === ',' && depth === 0) { args.push(cur.trim()); cur = ''; continue; }
-    cur += ch;
-  }
-  if (cur.trim()) args.push(cur.trim());
-  return args;
-}
-
-function splitOnOp(expr, op) {
-  let depth = 0, inStr = false, sc = '';
-  for (let i = 0; i < expr.length; i++) {
-    const ch = expr[i];
-    if (inStr) { if (ch === sc) inStr = false; continue; }
-    if (ch === '"' || ch === "'") { inStr = true; sc = ch; continue; }
-    if (ch === '(' || ch === '[') { depth++; continue; }
-    if (ch === ')' || ch === ']') { depth--; continue; }
-    if (depth === 0 && expr.slice(i, i + op.length) === op) {
-      const after  = expr[i + op.length] || '';
-      const before = i > 0 ? expr[i - 1] : '';
-      if (op === '<'  && (after === '=' || after === '>')) continue;
-      if (op === '>'  && after === '=') continue;
-      if (op === '='  && (before === '<' || before === '>' || before === '!')) continue;
-      return [expr.slice(0, i).trim(), expr.slice(i + op.length).trim()];
-    }
-  }
-  return null;
-}
-
-function splitOnKeyword(expr, kw) {
-  const search = ' ' + kw + ' ';
-  let depth = 0, inStr = false, sc = '';
-  for (let i = 0; i <= expr.length - search.length; i++) {
-    const ch = expr[i];
-    if (inStr) { if (ch === sc) inStr = false; continue; }
-    if (ch === '"' || ch === "'") { inStr = true; sc = ch; continue; }
-    if (ch === '(' || ch === '[') { depth++; continue; }
-    if (ch === ')' || ch === ']') { depth--; continue; }
-    if (depth === 0 && expr.slice(i, i + search.length) === search)
-      return [expr.slice(0, i).trim(), expr.slice(i + search.length).trim()];
-  }
-  return null;
-}
-
-// ── setVar – async so array indices can be evaluated ─────────
-async function setVar(env, name, val, lineNum) {
-  const am = name.match(/^(\w+)\[(.+)\]$/);
-  if (am) {
-    const aName   = am[1];
-    const idxExpr = am[2].trim();
-    if (typeof env[aName] !== 'object' || env[aName] === null || env[aName] === UNINITIALIZED) {
-      throw { message: `Error on Line ${lineNum}: '${aName}' is not a declared array` };
-    }
-    // Evaluate each dimension of the index
-    const parts     = idxExpr.split(',');
-    const evaluated = await Promise.all(parts.map(p => evalExpr(p.trim(), env, lineNum)));
-    const normIdx   = evaluated.join(',');
-    env[aName][normIdx] = val;
-    traceVar(lineNum, `${aName}[${normIdx}]`, val);
-    return;
-  }
-  env[name] = val;
-  traceVar(lineNum, name, val);
-}
-
-function getVar(env, name, lineNum) {
-  if (!Object.prototype.hasOwnProperty.call(env, name))
-    throw { message: `Error on Line ${lineNum}: Variable '${name}' has not been declared` };
-  const v = env[name];
-  if (v === UNINITIALIZED)
-    throw { message: `Error on Line ${lineNum}: Variable '${name}' is used before being assigned a value` };
-  return v;
-}
-
-// ── evalExpr – async (needed for user-defined function calls) ─
-async function evalExpr(expr, env, lineNum) {
-  if (expr === null || expr === undefined) return null;
-  expr = expr.trim();
-  if (!expr) return null;
-
-  // 1. String literals
-  if (expr.length >= 2 && expr[0] === '"' && expr[expr.length - 1] === '"') return expr.slice(1, -1);
-  if (expr.length >= 2 && expr[0] === "'" && expr[expr.length - 1] === "'") return expr.slice(1, -1);
-
-  // 2. Boolean literals
-  if (expr === 'TRUE')  return true;
-  if (expr === 'FALSE') return false;
-
-  // 3. Numeric literals
-  if (/^-?\d+(\.\d+)?$/.test(expr)) return parseFloat(expr);
-
-  // 4. Array element  Arr[idx]  or  Grid[r,c]
-  {
-    const am = expr.match(/^(\w+)\[(.+)\]$/);
-    if (am) {
-      const aName = am[1];
-      if (!Object.prototype.hasOwnProperty.call(env, aName))
-        throw { message: `Error on Line ${lineNum}: Array '${aName}' has not been declared` };
-      const arr = env[aName];
-      if (typeof arr !== 'object' || arr === null || arr === UNINITIALIZED)
-        throw { message: `Error on Line ${lineNum}: '${aName}' is not an array` };
-      const parts     = am[2].trim().split(',');
-      const evaluated = await Promise.all(parts.map(p => evalExpr(p.trim(), env, lineNum)));
-      const normIdx   = evaluated.join(',');
-      // Try the evaluated key first, then numeric coercion
-      let val = arr[normIdx];
-      if (val === undefined) {
-        const numKey = Number(normIdx);
-        if (!isNaN(numKey)) val = arr[numKey];
-      }
-      if (val === undefined)
-        throw { message: `Error on Line ${lineNum}: Index [${normIdx}] out of bounds for '${aName}'` };
-      if (val === UNINITIALIZED)
-        throw { message: `Error on Line ${lineNum}: Array element '${aName}[${normIdx}]' has not been assigned` };
-      return val;
-    }
-  }
-
-  // 5. Parentheses stripping
-  if (expr[0] === '(') {
-    let d = 0;
-    for (let i = 0; i < expr.length; i++) {
-      if (expr[i] === '(') d++;
-      else if (expr[i] === ')') {
-        d--;
-        if (d === 0 && i === expr.length - 1) return evalExpr(expr.slice(1, -1), env, lineNum);
-        if (d === 0) break;
-      }
-    }
-  }
-
-  // 6. NOT
-  if (/^NOT\s/i.test(expr)) return !await evalExpr(expr.slice(4), env, lineNum);
-
-  // 7. Built-in and user function calls  NAME(...)
-  // ── 7a. Whole expression IS a single function call ──────────
-  {
-    const fm = expr.match(/^([A-Za-z_]\w*)\s*\((.*)?\)$/);
-    if (fm) {
-      const fn     = fm[1].toUpperCase();
-      const argStr = fm[2] || '';
-      const args   = argStr.trim()
-        ? await Promise.all(splitArgs(argStr).map(a => evalExpr(a.trim(), env, lineNum)))
-        : [];
-
-      switch (fn) {
-        case 'LENGTH':    return String(args[0] != null ? args[0] : '').length;
-        case 'LCASE':     return String(args[0] != null ? args[0] : '').toLowerCase();
-        case 'UCASE':     return String(args[0] != null ? args[0] : '').toUpperCase();
-        case 'MID':       { const s = String(args[0] ?? ''); return s.slice(+args[1] - 1, (+args[1] - 1) + +args[2]); }
-        case 'RIGHT':     return String(args[0] ?? '').slice(-Math.abs(+args[1]));
-        case 'LEFT':      return String(args[0] ?? '').slice(0, +args[1]);
-        case 'SUBSTRING': { const s = String(args[0] ?? ''); return s.slice(+args[1] - 1, (+args[1] - 1) + +args[2]); }
-        case 'INT':       return Math.trunc(+args[0]);
-        case 'RAND':      return Math.random() * (+args[0] || 1);
-        case 'RANDOM':    return Math.random();
-        case 'ROUND':     return parseFloat((+args[0]).toFixed(args[1] != null ? +args[1] : 0));
-        case 'ABS':       return Math.abs(+args[0]);
-        case 'SQRT':      return Math.sqrt(+args[0]);
-        case 'EOF':       return true;
-        case 'DIV':       return Math.trunc(+args[0] / +args[1]);
-        case 'MOD':       return (+args[0]) % (+args[1]);
-        case 'NOT':       return !args[0];
-        default: {
-          // User-defined function
-          const ufn = interpFunctions[fn];
-          if (ufn) {
-            // localEnv inherits all globals so function can read them
-            const localEnv = Object.assign({}, env);
-            ufn.params.forEach((p, i) => {
-              localEnv[p.name] = args[i] !== undefined ? args[i] : UNINITIALIZED;
-            });
-            let retVal = null;
-            try {
-              await interpret(ufn.lines, localEnv, 0, null, false);
-            } catch (e) {
-              if (e && e.type === 'return') retVal = e.value;
-              else throw e;
-            }
-            return retVal;
-          }
-          throw { message: `Error on Line ${lineNum}: Unknown function '${fn}'` };
-        }
-      }
-    }
-  }
-
-  // ── 7b. Function call as sub-expression, e.g. ROUND(X,0)+1 ──
-  // Scan left-to-right for NAME( ... ) patterns at depth 0 and replace
-  // each with a unique sentinel token so the rest of evalExpr can handle
-  // the surrounding arithmetic/comparison operators normally.
-  {
-    // Quick check: does the expression contain any '(' at all?
-    if (expr.includes('(')) {
-      const sentinels = [];   // { token: '__S0__', value: <resolved> }
-      let   out = '';
-      let   ii  = 0;
-      let   inStr = false, sc = '';
-      while (ii < expr.length) {
-        const ch = expr[ii];
-        // Pass strings through verbatim
-        if (inStr) { out += ch; if (ch === sc) inStr = false; ii++; continue; }
-        if (ch === '"' || ch === "'") { inStr = true; sc = ch; out += ch; ii++; continue; }
-        // Detect NAME(
-        if (/[A-Za-z_]/.test(ch)) {
-          let jj = ii + 1;
-          while (jj < expr.length && /[A-Za-z0-9_]/.test(expr[jj])) jj++;
-          const word = expr.slice(ii, jj);
-          // Is this immediately followed by '('?
-          let kk = jj;
-          while (kk < expr.length && expr[kk] === ' ') kk++;
-          if (expr[kk] === '(') {
-            // Find the matching closing paren (respecting nesting and strings)
-            let depth = 0, ll = kk, inS2 = false, sc2 = '';
-            while (ll < expr.length) {
-              const c2 = expr[ll];
-              if (inS2) { if (c2 === sc2) inS2 = false; ll++; continue; }
-              if (c2 === '"' || c2 === "'") { inS2 = true; sc2 = c2; ll++; continue; }
-              if (c2 === '(') depth++;
-              else if (c2 === ')') { depth--; if (depth === 0) { ll++; break; } }
-              ll++;
-            }
-            // Evaluate the whole function call sub-expression
-            const callExpr = expr.slice(ii, ll);
-            const val      = await evalExpr(callExpr, env, lineNum);
-            const tok      = `__S${sentinels.length}__`;
-            sentinels.push({ token: tok, value: val });
-            out += tok;
-            ii = ll;
-            continue;
-          }
-          // Not a function call — emit word as-is
-          out += word;
-          ii   = jj;
-          continue;
-        }
-        out += ch; ii++;
-      }
-      // Only recurse if we actually resolved at least one call
-      if (sentinels.length > 0) {
-        // Build a synthetic env that maps each sentinel to its value
-        const synEnv = Object.assign({}, env);
-        sentinels.forEach(s => { synEnv[s.token] = s.value; });
-        return await evalExpr(out, synEnv, lineNum);
-      }
-    }
-  }
-
-  // 8. DIV / MOD keywords
-  { const p = splitOnKeyword(expr, 'DIV'); if (p) return Math.trunc(+await evalExpr(p[0], env, lineNum) / +await evalExpr(p[1], env, lineNum)); }
-  { const p = splitOnKeyword(expr, 'MOD'); if (p) return (+await evalExpr(p[0], env, lineNum)) % (+await evalExpr(p[1], env, lineNum)); }
-
-  // 9. Logical AND / OR
-  { const p = splitOnKeyword(expr, 'AND'); if (p) return Boolean(await evalExpr(p[0], env, lineNum)) && Boolean(await evalExpr(p[1], env, lineNum)); }
-  { const p = splitOnKeyword(expr, 'OR');  if (p) return Boolean(await evalExpr(p[0], env, lineNum)) || Boolean(await evalExpr(p[1], env, lineNum)); }
-
-  // 10. String concatenation &
-  { const p = splitOnOp(expr, '&'); if (p) return String(await evalExpr(p[0], env, lineNum)) + String(await evalExpr(p[1], env, lineNum)); }
-
-  // 11. Comparisons (longest op first)
-  for (const op of ['<>', '<=', '>=', '<', '>', '=']) {
-    const p = splitOnOp(expr, op);
-    if (p) {
-      const [av, bv] = await Promise.all([evalExpr(p[0], env, lineNum), evalExpr(p[1], env, lineNum)]);
-      // Use string ordering when both operands are strings; numeric otherwise
-      const bothStr = typeof av === 'string' && typeof bv === 'string';
-      switch (op) {
-        case '=':  return av === bv;
-        case '<>': return av !== bv;
-        case '<':  return bothStr ? av < bv  : +av < +bv;
-        case '>':  return bothStr ? av > bv  : +av > +bv;
-        case '<=': return bothStr ? av <= bv : +av <= +bv;
-        case '>=': return bothStr ? av >= bv : +av >= +bv;
-      }
-    }
-  }
-
-  // 12. Power ^
-  { const p = splitOnOp(expr, '^'); if (p) return Math.pow(+await evalExpr(p[0], env, lineNum), +await evalExpr(p[1], env, lineNum)); }
-
-  // 13. Arithmetic via safe JS eval  (+  -  *  /)
-  {
-    let jsExpr = '', i = 0, inStr = false, sc = '';
-    while (i < expr.length) {
-      const ch = expr[i];
-      if (inStr) { jsExpr += ch; if (ch === sc) inStr = false; i++; continue; }
-      if (ch === '"' || ch === "'") { inStr = true; sc = ch; jsExpr += ch; i++; continue; }
-      if (/[A-Za-z_]/.test(ch)) {
-        let j = i + 1;
-        while (j < expr.length && /[A-Za-z0-9_]/.test(expr[j])) j++;
-        const word = expr.slice(i, j);
-        if (word === 'TRUE')  { jsExpr += 'true';  i = j; continue; }
-        if (word === 'FALSE') { jsExpr += 'false'; i = j; continue; }
-        if (Object.prototype.hasOwnProperty.call(env, word)) {
-          const v = env[word];
-          if (v === UNINITIALIZED)
-            throw { message: `Error on Line ${lineNum}: Variable '${word}' is used before being assigned a value` };
-          jsExpr += (typeof v === 'string') ? JSON.stringify(v) : (v === null ? 'null' : String(v));
-        } else {
-          jsExpr += word;
-        }
-        i = j; continue;
-      }
-      jsExpr += ch; i++;
-    }
-    try {
-      // eslint-disable-next-line no-new-func
-      return Function('"use strict"; return (' + jsExpr + ')')();
-    } catch (_) { /* fall through */ }
-  }
-
-  // 14. Plain variable lookup
-  if (/^[A-Za-z_]\w*$/.test(expr)) return getVar(env, expr, lineNum);
-
-  throw { message: `Error on Line ${lineNum}: Cannot evaluate expression: ${expr}` };
-}
-
-// ── Collect procedure/function definitions (top-level only) ──
-function collectDefs(lines) {
-  interpProcedures = {};
-  interpFunctions  = {};
-  for (let j = 0; j < lines.length; j++) {
-    const l = lines[j].text;
-    if (/^PROCEDURE\s+\w+/i.test(l)) {
-      const name = l.match(/^PROCEDURE\s+(\w+)/i)[1];
-      let end = j + 1;
-      while (end < lines.length && !/^ENDPROCEDURE\b/i.test(lines[end].text)) end++;
-      interpProcedures[name.toUpperCase()] = { lines: lines.slice(j + 1, end), params: parseParams(l) };
-    }
-    if (/^FUNCTION\s+\w+/i.test(l)) {
-      const name = l.match(/^FUNCTION\s+(\w+)/i)[1];
-      let end = j + 1;
-      while (end < lines.length && !/^ENDFUNCTION\b/i.test(lines[end].text)) end++;
-      interpFunctions[name.toUpperCase()] = { lines: lines.slice(j + 1, end), params: parseParams(l), retType: parseReturnType(l) };
-    }
-  }
-}
-
-function parseParams(decl) {
-  const m = decl.match(/\((.+)\)/);
-  if (!m) return [];
-  return splitArgs(m[1]).map(p => {
-    const byref = /BYREF/i.test(p);
-    const clean = p.replace(/BYVAL|BYREF/gi, '').trim();
-    const pm = clean.match(/(\w+)\s*:\s*(\w+)/);
-    return pm ? { name: pm[1], type: pm[2], byref } : { name: clean, type: 'ANY', byref };
-  });
-}
-function parseReturnType(decl) {
-  const m = decl.match(/RETURNS\s+(\w+)/i);
-  return m ? m[1] : 'ANY';
-}
-
-// ── Execute a single inline statement (CASE body, etc.) ──────
-async function executeInline(stmt, env, lineNum) {
-  const fakeLine = { text: stmt, orig: stmt, num: lineNum };
-  await interpret([fakeLine], env, 0, 1, false);
-}
-
-// ── Type validation for INPUT ─────────────────────────────────
-function validateAndParseInput(raw, typeName, varName, lineNum) {
-  if (!typeName) {
-    // Auto-detect
-    if (raw.toLowerCase() === 'true')  return true;
-    if (raw.toLowerCase() === 'false') return false;
-    if (raw.trim() !== '' && !isNaN(raw)) return raw.includes('.') ? parseFloat(raw) : parseInt(raw, 10);
-    return raw;
-  }
-  const t = typeName.toUpperCase();
-  if (t === 'INTEGER') {
-    const n = Number(raw);
-    if (raw.trim() === '' || isNaN(n) || !Number.isInteger(n))
-      throw { message: `Error on Line ${lineNum}: '${varName}' is INTEGER but got "${raw}" — enter a whole number` };
-    return n;
-  }
-  if (t === 'REAL') {
-    const n = Number(raw);
-    if (raw.trim() === '' || isNaN(n))
-      throw { message: `Error on Line ${lineNum}: '${varName}' is REAL but got "${raw}" — enter a number` };
-    return n;
-  }
-  if (t === 'BOOLEAN') {
-    if (raw.toUpperCase() !== 'TRUE' && raw.toUpperCase() !== 'FALSE')
-      throw { message: `Error on Line ${lineNum}: '${varName}' is BOOLEAN but got "${raw}" — enter TRUE or FALSE` };
-    return raw.toUpperCase() === 'TRUE';
-  }
-  if (t === 'CHAR') {
-    let charVal = raw;
-    // Allow student to type 'A' with surrounding quotes (natural pseudocode habit)
-    if (charVal.length === 3 && charVal[0] === "'" && charVal[2] === "'") charVal = charVal[1];
-    if ([...charVal].length !== 1)
-      throw { message: `Error on Line ${lineNum}: '${varName}' is CHAR but got "${raw}" — enter a single character` };
-    return charVal;
-  }
-  // STRING: any value
-  return raw;
-}
-
-// ── MAIN INTERPRETER ─────────────────────────────────────────
-// isTopLevel = true  →  run collectDefs and reset declaredTypes
-// isTopLevel = false →  sub-call (procedure body, IF block, loop body, etc.)
-async function interpret(lines, env, startIdx = 0, endIdx = null, isTopLevel = false) {
-  let i         = startIdx;
-  const end     = endIdx !== null ? endIdx : lines.length;
-
-  if (isTopLevel) {
-    collectDefs(lines);
-    declaredTypes = {};
-  }
-
-  while (i < end) {
-    const line = lines[i];
-    let l = stripLineComment(normalizeArrows(line.text));
-
-    // Skip blank lines and comments
-    if (!l || l.startsWith('//')) { i++; continue; }
-
-    // Skip procedure/function definitions in main flow
-    if (/^(PROCEDURE|FUNCTION)\b/i.test(l)) {
-      while (i < end && !/^(ENDPROCEDURE|ENDFUNCTION)\b/i.test(lines[i].text)) i++;
-      i++; continue;
-    }
-    if (/^(ENDPROCEDURE|ENDFUNCTION)\b/i.test(l)) { i++; continue; }
-
-    // ── STEP MODE pause ──────────────────────────────────────
-    if (interpStepMode) {
-      consoleLog(`\u2192 Line ${line.num}: ${line.orig.trim()}`, 'info');
-      buildTraceTable();
-      await new Promise(resolve => { stepResolve = resolve; });
-      stepResolve = null;
-    }
-
-    // ════════════════════════════════════════════════════════
-    //  STATEMENT DISPATCH
-    // ════════════════════════════════════════════════════════
-
-    // ── DECLARE ──────────────────────────────────────────────
-    if (/^DECLARE\s+/i.test(l)) {
-      const rest = l.replace(/^DECLARE\s+/i, '');
-      // Find colon that separates name(s) from type, skipping brackets
-      let colonIdx = -1, bd = 0;
-      for (let ci = 0; ci < rest.length; ci++) {
-        if (rest[ci] === '[') bd++;
-        else if (rest[ci] === ']') bd--;
-        else if (rest[ci] === ':' && bd === 0) { colonIdx = ci; break; }
-      }
-      if (colonIdx === -1)
-        throw { message: `Error on Line ${line.num}: Invalid DECLARE — missing colon` };
-
-      const namesPart = rest.slice(0, colonIdx).trim();
-      const typePart  = rest.slice(colonIdx + 1).trim();
-      // Support multiple names:  DECLARE a, b, c : INTEGER
-      const names = namesPart.split(',').map(n => n.trim()).filter(Boolean);
-      for (const name of names) {
-        if (!/^\w+$/.test(name))
-          throw { message: `Error on Line ${line.num}: Invalid identifier '${name}'` };
-
-        if (/^ARRAY/i.test(typePart)) {
-          const am = typePart.match(/^ARRAY\s*\[\s*(\d+)\s*:\s*(\d+)(?:\s*,\s*(\d+)\s*:\s*(\d+))?\s*\]\s+OF\s+(\w+)/i);
-          env[name] = {};
-          if (am) {
-            if (am[3] !== undefined) {
-              for (let r = +am[1]; r <= +am[2]; r++)
-                for (let c = +am[3]; c <= +am[4]; c++) env[name][`${r},${c}`] = UNINITIALIZED;
-            } else {
-              for (let k = +am[1]; k <= +am[2]; k++) env[name][k] = UNINITIALIZED;
-            }
-            declaredTypes[name] = am[5] ? am[5].toUpperCase() : null; // element type
-          }
-        } else {
-          env[name] = UNINITIALIZED;
-          declaredTypes[name] = typePart.replace(/\s.*/,'').toUpperCase(); // e.g. STRING (ignore extra words)
-        }
-      }
-      i++; continue;
-    }
-
-    // ── CONSTANT ─────────────────────────────────────────────
-    if (/^CONSTANT\s+/i.test(l)) {
-      const m = l.match(/^CONSTANT\s+(\w+)\s*[\u2190=]\s*(.+)/i);
-      if (m) env[m[1]] = await evalExpr(m[2].trim(), env, line.num);
-      i++; continue;
-    }
-
-    // ── OUTPUT ───────────────────────────────────────────────
-    if (/^OUTPUT\s+/i.test(l)) {
-      const rest  = l.replace(/^OUTPUT\s+/i, '');
-      const parts = splitArgs(rest);
-      const vals  = await Promise.all(parts.map(async p => {
-        const v = await evalExpr(p.trim(), env, line.num);
-        return (v === null || v === undefined) ? '' : String(v);
-      }));
-      const outStr = vals.join('');
-      consoleLog(outStr);
-      traceOutput(line.num, outStr);
-      i++; continue;
-    }
-
-    // ── INPUT ────────────────────────────────────────────────
-    if (/^INPUT\s+/i.test(l)) {
-      const varName = l.replace(/^INPUT\s+/i, '').trim();
-      // Determine declared type (works for scalars and array elements)
-      let typeName = null;
-      const arrayMatch = varName.match(/^(\w+)\[/);
-      typeName = arrayMatch ? declaredTypes[arrayMatch[1]] : declaredTypes[varName];
-
-      // Re-prompt until the user provides a value matching the declared type
-      let parsed;
-      while (true) {
-        const raw = await requestInput(varName, typeName);
-        try {
-          parsed = validateAndParseInput(raw, typeName, varName, line.num);
-          break;
-        } catch (e) {
-          consoleLog((e && e.message ? e.message : String(e)) + ' — please try again.', 'error');
-        }
-      }
-      await setVar(env, varName, parsed, line.num);
-      i++; continue;
-    }
-
-    // ── ASSIGNMENT   LHS \u2190 RHS ──────────────────────────────
-    {
-      const ai = findArrowIdx(l);
-      if (ai > 0 && !/^(IF|WHILE|UNTIL|FOR|REPEAT|CASE|DECLARE|CONSTANT|PROCEDURE|FUNCTION)\b/i.test(l)) {
-        const lhs = l.slice(0, ai).trim();
-        const rhs = l.slice(ai + 1).trim();
-        const val = await evalExpr(rhs, env, line.num);
-        await setVar(env, lhs, val, line.num);
-        i++; continue;
-      }
-    }
-
-    // ── IF ───────────────────────────────────────────────────
-    if (/^IF\s+/i.test(l)) {
-      const cond    = l.replace(/^IF\s+/i, '').replace(/\s+THEN\s*$/i, '');
-      const condVal = await evalExpr(cond, env, line.num);
-      let depth = 1, j = i + 1, elseJ = -1;
-      while (j < end && depth > 0) {
-        const t = lines[j].text;
-        if (/^IF\b/i.test(t)) depth++;
-        if (/^ENDIF\b/i.test(t)) depth--;
-        if (depth === 1 && /^ELSE\b/i.test(t) && elseJ === -1) elseJ = j;
-        j++;
-      }
-      const endifJ = j - 1;
-      if (condVal)            await interpret(lines, env, i + 1, elseJ !== -1 ? elseJ : endifJ);
-      else if (elseJ !== -1)  await interpret(lines, env, elseJ + 1, endifJ);
-      i = endifJ + 1; continue;
-    }
-
-    // ── FOR ──────────────────────────────────────────────────
-    if (/^FOR\s+/i.test(l)) {
-      const m = l.match(/^FOR\s+(\w+)\s*\u2190\s*(.+?)\s+TO\s+(.+?)(?:\s+STEP\s+(.+))?$/i);
-      if (m) {
-        const [, v, fromE, toE, stepE] = m;
-        const from = +await evalExpr(fromE, env, line.num);
-        const to   = +await evalExpr(toE,   env, line.num);
-        const step = stepE ? +await evalExpr(stepE, env, line.num) : 1;
-        let depth = 1, j = i + 1;
-        while (j < end && depth > 0) {
-          if (/^FOR\b/i.test(lines[j].text)) depth++;
-          if (/^NEXT\b/i.test(lines[j].text)) depth--;
-          j++;
-        }
-        const nextJ = j - 1;
-        const ok    = step > 0 ? (v => v <= to) : (v => v >= to);
-        for (let val = from; ok(val); val += step) {
-          await setVar(env, v, val, line.num);
-          await interpret(lines, env, i + 1, nextJ);
-        }
-        i = nextJ + 1; continue;
-      }
-    }
-
-    // ── WHILE ────────────────────────────────────────────────
-    if (/^WHILE\s+/i.test(l)) {
-      const cond = l.replace(/^WHILE\s+/i, '').replace(/\s+DO\s*$/i, '');
-      let depth = 1, j = i + 1;
-      while (j < end && depth > 0) {
-        if (/^WHILE\b/i.test(lines[j].text)) depth++;
-        if (/^ENDWHILE\b/i.test(lines[j].text)) depth--;
-        j++;
-      }
-      const endJ = j - 1;
-      let guard = 0;
-      while (await evalExpr(cond, env, line.num) && guard++ < 100000)
-        await interpret(lines, env, i + 1, endJ);
-      i = endJ + 1; continue;
-    }
-
-    // ── REPEAT ──────────────────────────────────────────────
-    if (/^REPEAT\s*$/i.test(l)) {
-      let j = i + 1;
-      while (j < end && !/^UNTIL\b/i.test(lines[j].text)) j++;
-      const untilJ = j;
-      const cond   = normalizeArrows(lines[untilJ].text.replace(/^UNTIL\s+/i, ''));
-      let guard = 0;
-      do {
-        await interpret(lines, env, i + 1, untilJ);
-        guard++;
-      } while (!await evalExpr(cond, env, lines[untilJ].num) && guard < 100000);
-      i = untilJ + 1; continue;
-    }
-
-    // ── CASE OF ─────────────────────────────────────────────
-    if (/^CASE\s+OF\s+/i.test(l)) {
-      const varVal = await evalExpr(l.replace(/^CASE\s+OF\s+/i, '').trim(), env, line.num);
-      let j = i + 1, matched = false;
-      while (j < end && !/^ENDCASE\b/i.test(lines[j].text)) {
-        const cl = normalizeArrows(lines[j].text);
-        if (/^OTHERWISE\b/i.test(cl)) {
-          if (!matched) {
-            const stmt = cl.replace(/^OTHERWISE\s*:?\s*/i, '').trim();
-            if (stmt) await executeInline(stmt, env, lines[j].num);
-            else {
-              let k = j + 1;
-              while (k < end && !/^ENDCASE\b/i.test(lines[k].text)) k++;
-              await interpret(lines, env, j + 1, k);
-              j = k; break;
-            }
-          }
-          while (j < end && !/^ENDCASE\b/i.test(lines[j].text)) j++;
-          break;
-        }
-        const cm = cl.match(/^(.+?)\s*:\s*(.*)?$/);
-        if (cm && !matched) {
-          const caseExpr = cm[1].trim();
-          const stmt     = (cm[2] || '').trim();
-          let match = false;
-          const rangeM = caseExpr.match(/^(.+?)\s+TO\s+(.+)$/i);
-          if (rangeM) {
-            const lo = await evalExpr(rangeM[1], env, line.num);
-            const hi = await evalExpr(rangeM[2], env, line.num);
-            match = varVal >= lo && varVal <= hi;
-          } else {
-            match = (await evalExpr(caseExpr, env, line.num)) == varVal;
-          }
-          if (match) {
-            matched = true;
-            if (stmt) await executeInline(stmt, env, lines[j].num);
-            else {
-              let k = j + 1;
-              while (k < end && !/^ENDCASE\b/i.test(lines[k].text) && !/^OTHERWISE\b/i.test(lines[k].text)) {
-                if (/^.+\s*:/.test(normalizeArrows(lines[k].text)) && !/^(IF|WHILE|FOR|REPEAT)\b/i.test(lines[k].text)) break;
-                k++;
-              }
-              await interpret(lines, env, j + 1, k);
-              j = k - 1;
-            }
-          }
-        }
-        j++;
-      }
-      i = j + 1; continue;
-    }
-
-    // ── CALL ─────────────────────────────────────────────────
-    if (/^CALL\s+/i.test(l)) {
-      const m = l.match(/^CALL\s+(\w+)(?:\s*\((.*)\))?/i);
-      if (m) {
-        const pName  = m[1];
-        const argStr = m[2] || '';
-        const proc   = interpProcedures[pName.toUpperCase()];
-        if (!proc)
-          throw { message: `Error on Line ${line.num}: Procedure '${pName}' is not defined` };
-        // Keep raw arg expressions so BYREF can write back to the correct caller variable
-        const argExprs = argStr.trim() ? splitArgs(argStr) : [];
-        const args     = await Promise.all(argExprs.map(a => evalExpr(a.trim(), env, line.num)));
-        // localEnv inherits all of env so the procedure can read global vars
-        const localEnv = Object.assign({}, env);
-        proc.params.forEach((p, idx) => {
-          localEnv[p.name] = args[idx] !== undefined ? args[idx] : UNINITIALIZED;
-        });
-        await interpret(proc.lines, localEnv, 0, null, false);
-        // Write back all pre-existing globals (excluding BYVAL params that shadow them)
-        const byvalNames = new Set(proc.params.filter(p => !p.byref).map(p => p.name));
-        Object.keys(env).forEach(key => {
-          if (!byvalNames.has(key) && Object.prototype.hasOwnProperty.call(localEnv, key)) {
-            env[key] = localEnv[key];
-          }
-        });
-        // BYREF: write formal param value back to the actual argument variable at call site
-        proc.params.forEach((p, idx) => {
-          if (p.byref && idx < argExprs.length) {
-            const argVar = argExprs[idx].trim();
-            if (/^\w+$/.test(argVar) && Object.prototype.hasOwnProperty.call(env, argVar)) {
-              env[argVar] = localEnv[p.name];
-            }
-          }
-        });
-      }
-      i++; continue;
-    }
-
-    // ── RETURN ───────────────────────────────────────────────
-    if (/^RETURN\s+/i.test(l)) {
-      const val = await evalExpr(l.replace(/^RETURN\s+/i, ''), env, line.num);
-      throw { type: 'return', value: val };
-    }
-
-    // ── FILE OPS (stub) ──────────────────────────────────────
-    if (/^(OPENFILE|CLOSEFILE|READFILE|WRITEFILE|SEEK|GETRECORD|PUTRECORD)\b/i.test(l)) {
-      consoleLog(`// Note: File operation on line ${line.num} is not simulated`, 'info');
-      i++; continue;
-    }
-
-    // ── Structural markers consumed by parent ────────────────
-    if (/^(ENDIF|ELSE|NEXT|ENDWHILE|UNTIL|ENDCASE|OTHERWISE)\b/i.test(l)) { i++; continue; }
-
-    // ── Unrecognised statement → error ───────────────────────
-    throw { message: `Error on Line ${line.num}: Unrecognised statement: "${line.orig.trim()}"` };
-  }
-}
-
-// ── RUN ──────────────────────────────────────────────────────
-async function runCode() {
-  if (isRunning) return;
-  consoleClear();
-  consoleLog('\u25b6 Running program\u2026', 'info');
-  interpTraceRows = []; interpEnv = {};
-  isRunning = true;
-  document.getElementById('btn-run').disabled = true;
-  switchRightTab('console');
-  const lines = codeInput.value.split('\n').map((t, i) => ({ text: t.trim(), orig: t, num: i + 1 }));
   try {
-    await interpret(lines, interpEnv, 0, null, true);
-    consoleLog('\u2713 Program finished.', 'info');
-  } catch (e) {
-    consoleLog(e && e.message ? e.message : String(e), 'error');
-  }
-  isRunning = false;
-  document.getElementById('btn-run').disabled = false;
-  buildTraceTable();
-}
-
-// ── STEP ─────────────────────────────────────────────────────
-function stepCode() {
-  if (!interpStepMode) {
-    consoleClear();
-    interpTraceRows = []; interpEnv = {};
-    interpStepMode = true;
-    document.getElementById('btn-step').style.borderColor = 'var(--yellow)';
-    document.getElementById('btn-step').style.color       = 'var(--yellow)';
-    document.getElementById('btn-run').disabled = true;
-    const lines = codeInput.value.split('\n').map((t, i) => ({ text: t.trim(), orig: t, num: i + 1 }));
-    interpret(lines, interpEnv, 0, null, true)
-      .then(() => { consoleLog('\u2713 Program finished.', 'info'); buildTraceTable(); endStepMode(); })
-      .catch(e  => { consoleLog(e && e.message ? e.message : String(e), 'error'); buildTraceTable(); endStepMode(); });
-    // Trigger first step
-    if (stepResolve) { const r = stepResolve; stepResolve = null; r(); }
-  } else {
-    if (stepResolve) { const r = stepResolve; stepResolve = null; r(); }
-    else consoleLog('// Program has finished or is awaiting INPUT.', 'info');
+    const res = await fetch(DOC_PATHS[docKey]);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const md  = await res.text();
+    modalBody.innerHTML = marked.parse(md);
+  } catch (err) {
+    modalBody.innerHTML = `
+      <div style="color:var(--red);font-family:var(--font-mono);font-size:12px;padding:20px 0;">
+        <strong>Could not load documentation.</strong><br><br>
+        Make sure the file exists at <code>${DOC_PATHS[docKey]}</code>.<br><br>
+        <span style="color:var(--text-muted)">${err.message}</span>
+      </div>`;
   }
 }
 
-function endStepMode() {
-  interpStepMode = false; stepResolve = null;
-  document.getElementById('btn-step').style.borderColor = '';
-  document.getElementById('btn-step').style.color = '';
-  document.getElementById('btn-run').disabled = false;
+function closeModal() {
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
 }
 
-function resetExecution() {
-  isRunning = false; endStepMode();
-  interpEnv = {}; interpTraceRows = []; interpProcedures = {}; interpFunctions = {};
-  document.getElementById('input-modal-overlay').classList.remove('visible');
-  consoleClear();
-  consoleLog('// Console cleared. Ready to run.', 'info');
-  document.getElementById('trace-container').innerHTML = '<div class="trace-hint">Run your code to populate the trace table.</div>';
-}
-
-// ── Trace table ──────────────────────────────────────────────
-function buildTraceTable() {
-  const container = document.getElementById('trace-container');
-  if (!interpTraceRows.length) {
-    container.innerHTML = '<div class="trace-hint">No variable changes recorded. Run your code first.</div>';
-    return;
-  }
-  const vars = [];
-  interpTraceRows.forEach(r => { if (r.type === 'var' && !vars.includes(r.variable)) vars.push(r.variable); });
-  let html = `<table id="trace-table"><thead><tr><th>Line</th>`;
-  vars.forEach(v => html += `<th>${escHtml(v)}</th>`);
-  html += `<th style="color:var(--cyan)">OUTPUT</th></tr></thead><tbody>`;
-  interpTraceRows.forEach(row => {
-    html += `<tr><td>${row.line}</td>`;
-    vars.forEach(v => {
-      if (row.type === 'var' && row.variable === v) {
-        const d = (row.value === null || row.value === undefined) ? '' : String(row.value);
-        html += `<td style="color:var(--green);font-weight:600">${escHtml(d)}</td>`;
-      } else { html += '<td></td>'; }
-    });
-    html += row.type === 'output'
-      ? `<td style="color:var(--cyan)">${escHtml(String(row.value))}</td>`
-      : '<td></td>';
-    html += '</tr>';
-  });
-  html += '</tbody></table>';
-  container.innerHTML = html;
-}
-
-// ── Multi-file tab system ─────────────────────────────────────
-function saveCurrentFile() {
-  const cur = files.find(f => f.id === activeFileId);
-  if (cur) {
-    cur.content = codeInput.value;
-    if (cur.id === 1) localStorage.setItem('cie_code', cur.content);
-  }
-}
-
-function renameFile(id) {
-  // Used from sidebar — prompts via the same inline-input approach
-  const f = files.find(f => f.id === id);
-  if (!f) return;
-  // Find the nameSpan in the sidebar and kick off inline rename there
-  const sidebarList = document.getElementById('sidebar-file-list');
-  if (!sidebarList) return;
-  const rows = sidebarList.querySelectorAll('.snippet-item');
-  rows.forEach((row, idx) => {
-    if (files[idx] && files[idx].id === id) {
-      const nameSpan = row.querySelector('.sidebar-filename');
-      if (nameSpan) startRenameInline(id, nameSpan);
-    }
-  });
-}
-
-function startRenameInline(id, nameEl) {
-  const f = files.find(f => f.id === id);
-  if (!f) return;
-  const inp = document.createElement('input');
-  inp.value = f.name;
-  inp.style.cssText = [
-    'background:var(--bg-editor)',
-    'border:1px solid var(--accent)',
-    'border-radius:3px',
-    'color:var(--text-primary)',
-    'font-family:var(--font-mono)',
-    'font-size:12px',
-    'padding:1px 5px',
-    'outline:none',
-    'min-width:60px',
-    'width:' + Math.max(70, f.name.length * 8 + 16) + 'px',
-  ].join(';');
-  nameEl.replaceWith(inp);
-  inp.select();
-  let committed = false;
-  const commit = () => {
-    if (committed) return;
-    committed = true;
-    const newName = inp.value.trim();
-    if (newName) f.name = newName;
-    renderTabs();
-  };
-  inp.addEventListener('blur', commit);
-  inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter')  { e.preventDefault(); inp.blur(); }
-    if (e.key === 'Escape') { committed = true; renderTabs(); } // cancel
-    e.stopPropagation(); // don't fire Run on Ctrl+Enter etc.
-  });
-  inp.focus();
-}
-
-function renderTabs() {
-  const tabBar = document.getElementById('editor-tabs');
-  tabBar.innerHTML = '';
-  files.forEach(f => {
-    const tab = document.createElement('div');
-    const isActive = f.id === activeFileId;
-    tab.className = 'editor-tab' + (isActive ? ' active' : '');
-    tab.style.cursor = 'pointer';
-    const dot  = document.createElement('span');
-    dot.className = 'tab-dot';
-    const name = document.createElement('span');
-    name.textContent = f.name;
-    name.title = 'Double-click to rename';
-    name.addEventListener('dblclick', e => { e.stopPropagation(); startRenameInline(f.id, name); });
-    tab.appendChild(dot);
-    tab.appendChild(name);
-    if (files.length > 1) {
-      const x = document.createElement('button');
-      x.textContent = '\u00d7';
-      x.style.cssText = 'background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0 0 0 6px;line-height:1;margin-left:2px';
-      x.addEventListener('click', e => { e.stopPropagation(); closeFile(f.id); });
-      tab.appendChild(x);
-    }
-    tab.addEventListener('click', () => switchFile(f.id));
-    tabBar.appendChild(tab);
-  });
-  // "+" new-file button
-  const plus = document.createElement('button');
-  plus.textContent = '+';
-  plus.title = 'New file';
-  plus.style.cssText = 'background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0 12px;font-size:20px;line-height:34px;flex-shrink:0';
-  plus.addEventListener('click', newFile);
-  tabBar.appendChild(plus);
-  // Sync title bar filename
-  const active = files.find(f => f.id === activeFileId);
-  if (active) {
-    ['tab-filename'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = active.name;
-    });
-    const tc = document.getElementById('title-filename');
-    if (tc) tc.textContent = active.name;
-  }
-  // Rebuild sidebar file list so it always matches the open tabs
-  const sidebarList = document.getElementById('sidebar-file-list');
-  if (sidebarList) {
-    sidebarList.innerHTML = '';
-    files.forEach(f => {
-      const row = document.createElement('div');
-      row.className = 'snippet-item';
-      row.style.justifyContent = 'space-between';
-      if (f.id === activeFileId) row.style.color = 'var(--accent)';
-      const label = document.createElement('span');
-      label.style.cssText = 'display:flex;align-items:center;gap:8px;flex:1;min-width:0;cursor:pointer';
-      label.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>`;
-      const nameSpan = document.createElement('span');
-      nameSpan.textContent = f.name;
-      nameSpan.className = 'sidebar-filename';
-      nameSpan.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
-      label.appendChild(nameSpan);
-      label.addEventListener('click', () => switchFile(f.id));
-      row.appendChild(label);
-      // Pencil rename button
-      const editBtn = document.createElement('button');
-      editBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-      editBtn.title = 'Rename';
-      editBtn.style.cssText = 'background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0 4px;flex-shrink:0;display:flex;align-items:center';
-      editBtn.addEventListener('click', e => { e.stopPropagation(); startRenameInline(f.id, nameSpan); });
-      row.appendChild(editBtn);
-      if (files.length > 1) {
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = '×';
-        closeBtn.style.cssText = 'background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0 0 0 4px;flex-shrink:0';
-        closeBtn.addEventListener('click', e => { e.stopPropagation(); closeFile(f.id); });
-        row.appendChild(closeBtn);
-      }
-      sidebarList.appendChild(row);
-    });
-  }
-}
-
-function switchFile(id) {
-  saveCurrentFile();
-  activeFileId = id;
-  const target = files.find(f => f.id === id);
-  if (target) { codeInput.value = target.content; updateEditor(); }
-  renderTabs();
-}
-
-function newFile() {
-  saveCurrentFile();
-  const name = `file${nextFileId}.pseudo`;
-  files.push({ id: nextFileId, name, content: '// New file\n' });
-  activeFileId = nextFileId++;
-  codeInput.value = files[files.length - 1].content;
-  updateEditor(); renderTabs();
-  consoleClear(); consoleLog('// New file created.', 'info');
-}
-
-function closeFile(id) {
-  if (files.length <= 1) return;
-  const idx = files.findIndex(f => f.id === id);
-  files.splice(idx, 1);
-  if (activeFileId === id) {
-    activeFileId = files[Math.min(idx, files.length - 1)].id;
-    codeInput.value = files.find(f => f.id === activeFileId).content;
-    updateEditor();
-  }
-  renderTabs();
-}
-
-function clearCode() {
-  if (!confirm('Clear the editor?')) return;
-  codeInput.value = ''; saveCurrentFile(); updateEditor();
-}
-
-function downloadCode() {
-  const active = files.find(f => f.id === activeFileId);
-  const blob = new Blob([codeInput.value], { type: 'text/plain' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url; a.download = active ? active.name : 'pseudocode.pseudo'; a.click();
-  URL.revokeObjectURL(url);
-}
-
-// ── Sidebar ──────────────────────────────────────────────────
-function switchSidebar(panel) {
-  ['snippets','files','settings'].forEach(p => {
-    document.getElementById(`panel-${p}`).style.display = p === panel ? 'block' : 'none';
-    document.getElementById(`ab-${p}`).classList.toggle('active', p === panel);
-  });
-  if (currentSidebarPanel === panel) {
-    document.getElementById('sidebar-panel').classList.toggle('collapsed');
-    currentSidebarPanel = document.getElementById('sidebar-panel').classList.contains('collapsed') ? null : panel;
-  } else {
-    document.getElementById('sidebar-panel').classList.remove('collapsed');
-    currentSidebarPanel = panel;
-  }
-}
-
-function buildSnippets() {
-  const list = document.getElementById('snippets-list');
-  list.innerHTML = '';
-  SNIPPETS.forEach(cat => {
-    const catEl = document.createElement('div');
-    catEl.className = 'snippet-category';
-    catEl.textContent = cat.category;
-    list.appendChild(catEl);
-    cat.items.forEach(item => {
-      const el = document.createElement('div');
-      el.className = 'snippet-item';
-      el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>${escHtml(item.name)}`;
-      el.title = `Insert: ${item.name}`;
-      el.addEventListener('click', () => insertSnippet(item.code));
-      list.appendChild(el);
-    });
-  });
-}
-
-function insertSnippet(code) {
-  const ta = codeInput, s = ta.selectionStart;
-  const before = ta.value.slice(0, s), after = ta.value.slice(ta.selectionEnd);
-  const prefix = before && !before.endsWith('\n') ? '\n\n' : '';
-  ta.value = before + prefix + code + '\n' + after;
-  ta.selectionStart = ta.selectionEnd = s + prefix.length + code.length + 1;
-  ta.focus(); updateEditor();
-}
-
-function switchRightTab(tab) {
-  ['console','trace'].forEach(t => {
-    document.getElementById(`pane-${t}`).classList.toggle('active', t === tab);
-    document.getElementById(`rt-${t}`).classList.toggle('active', t === tab);
-  });
-}
-
-function changeFontSize(size) {
-  [codeInput, codeHighlight, lineNumbers].forEach(el => {
-    el.style.fontSize = `${size}px`; el.style.lineHeight = '1.7';
-  });
-  updateEditor();
-}
-function toggleAutoSave(val)    { autoSaveEnabled = val; }
-function toggleLinter(val)      { linterEnabled = val; if (!val) document.getElementById('linter-badge').innerHTML = ''; }
-function toggleLineNumbers(val) { lineNumbersEnabled = val; lineNumbers.style.display = val ? 'block' : 'none'; updateEditor(); }
-
-// ── INIT ─────────────────────────────────────────────────────
-function init() {
-  buildSnippets();
-  // Initialise file system
-  const saved = localStorage.getItem('cie_code');
-  const defaultContent = `// Welcome to CIE Pseudocode IDE
-// Cambridge IGCSE / O Level Computer Science
-
-DECLARE Name : STRING
-DECLARE Score : INTEGER
-DECLARE Grade : CHAR
-
-INPUT Name
-INPUT Score
-
-IF Score >= 70 THEN
-   Grade <- 'A'
-ELSE
-   IF Score >= 50 THEN
-      Grade <- 'B'
-   ELSE
-      Grade <- 'F'
-   ENDIF
-ENDIF
-
-OUTPUT "Student: ", Name
-OUTPUT "Score: ", Score
-OUTPUT "Grade: ", Grade`;
-
-  files = [{ id: 1, name: 'main.pseudo', content: saved || defaultContent }];
-  activeFileId = 1; nextFileId = 2;
-  codeInput.value = files[0].content;
-  renderTabs();
-  updateEditor();
-
-  document.addEventListener('keydown', e => {
-    if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); runCode(); }
-    if (e.key === 'Escape') document.getElementById('input-modal-overlay').classList.remove('visible');
-  });
-}
-
-init();
+document.querySelectorAll('.btn-docs').forEach(btn => {
+  btn.addEventListener('click', () => openDoc(btn.dataset.doc, btn.dataset.title));
+});
+closeBtn.addEventListener('click', closeModal);
+overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 </script>
 </body>
 </html>
