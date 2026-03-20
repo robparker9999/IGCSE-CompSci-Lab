@@ -694,6 +694,25 @@ function cancelWire(){
 
 // ── KEYBOARD DELETE ───────────────────────────────────────────
 document.addEventListener('keydown',e=>{
+  // ── Arrow keys → nudge selected components ──────────────────
+  const ARROWS = { ArrowUp:[0,-1], ArrowDown:[0,1], ArrowLeft:[-1,0], ArrowRight:[1,0] };
+  if (ARROWS[e.key] && selectedIds.size > 0) {
+    if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName))return;
+    if(document.activeElement.contentEditable==='true')return;
+    if(document.querySelector('[data-edit="1"]'))return;
+    e.preventDefault(); // stop the canvas from scrolling
+    const step  = e.shiftKey ? 1 : 10; // Shift = 1 px fine-nudge, normal = 10 px
+    const [dx, dy] = ARROWS[e.key];
+    selectedIds.forEach(id => {
+      const c = state.components.find(c=>c.id===id);
+      if (!c) return;
+      c.x = Math.max(0, c.x + dx * step);
+      c.y = Math.max(0, c.y + dy * step);
+    });
+    propagate(); render();
+    return;
+  }
+
   if(e.key!=='Delete'&&e.key!=='Backspace')return;
   if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName))return;
   if(document.activeElement.contentEditable==='true')return;
