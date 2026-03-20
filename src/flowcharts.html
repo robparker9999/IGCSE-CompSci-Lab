@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CIE Flowchart Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/flowcharts.css">
+</head>
+<body>
+
+<!-- TITLE BAR -->
+<div id="titlebar">
+  <a class="logo" href="https://its-idhem.github.io/IGCSE-CompSci-Lab/">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2 L22 12 L12 22 L2 12 Z"/>
+    </svg>
+    CIE Flowchart Lab
+  </a>
+  <div class="title-center">IGCSE Computer Science — Flowchart &amp; Structure Diagram</div>
+  <div class="title-actions">
+    <a class="title-btn" href="pseudocode.html" style="text-decoration:none">Pseudocode ↗</a>
+    <a class="title-btn" href="logic-gates.html" style="text-decoration:none">Logic Gates ↗</a>
+    <button class="title-btn" id="btn-export-bw">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      Export B&amp;W
+    </button>
+    <button class="title-btn" id="btn-clear">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+      Clear
+    </button>
+    <button class="title-btn" id="btn-theme">⏾</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div id="workspace">
+
+    <!-- LEFT SIDEBAR -->
+    <div id="left-sidebar">
+      <div class="sidebar-header">Components</div>
+      <div id="component-library">
+        <div class="comp-category">Flowchart</div>
+        <div class="comp-item" data-type="START">
+          <svg width="40" height="18" viewBox="0 0 120 50"><rect x="1" y="1" width="118" height="48" rx="24" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="60" y="25" text-anchor="middle" dominant-baseline="central" font-size="11" fill="currentColor" font-family="Outfit,sans-serif">START</text></svg>
+          <span>Start</span>
+        </div>
+        <div class="comp-item" data-type="STOP">
+          <svg width="40" height="18" viewBox="0 0 120 50"><rect x="1" y="1" width="118" height="48" rx="24" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="60" y="25" text-anchor="middle" dominant-baseline="central" font-size="11" fill="currentColor" font-family="Outfit,sans-serif">STOP</text></svg>
+          <span>Stop</span>
+        </div>
+        <div class="comp-item" data-type="INPUT">
+          <svg width="40" height="18" viewBox="0 0 130 55"><polygon points="15,1 129,1 115,54 1,54" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="65" y="28" text-anchor="middle" dominant-baseline="central" font-size="10" fill="currentColor" font-family="Outfit,sans-serif">INPUT</text></svg>
+          <span>Input</span>
+        </div>
+        <div class="comp-item" data-type="OUTPUT">
+          <svg width="40" height="18" viewBox="0 0 130 55"><polygon points="15,1 129,1 115,54 1,54" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="65" y="28" text-anchor="middle" dominant-baseline="central" font-size="10" fill="currentColor" font-family="Outfit,sans-serif">OUTPUT</text></svg>
+          <span>Output</span>
+        </div>
+        <div class="comp-item" data-type="PROCESS">
+          <svg width="40" height="18" viewBox="0 0 130 55"><rect x="1" y="1" width="128" height="53" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="65" y="28" text-anchor="middle" dominant-baseline="central" font-size="10" fill="currentColor" font-family="Outfit,sans-serif">Process</text></svg>
+          <span>Process</span>
+        </div>
+        <div class="comp-item" data-type="DECISION">
+          <svg width="40" height="27" viewBox="0 0 120 80"><polygon points="60,1 119,40 60,79 1,40" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="60" y="40" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" font-family="Outfit,sans-serif">Decision</text></svg>
+          <span>Decision</span>
+        </div>
+        <div class="comp-item" data-type="EMBEDDED">
+          <svg width="40" height="18" viewBox="0 0 130 55"><rect x="1" y="1" width="128" height="53" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="13" y1="1" x2="13" y2="54" stroke="currentColor" stroke-width="1.5"/><line x1="117" y1="1" x2="117" y2="54" stroke="currentColor" stroke-width="1.5"/><text x="65" y="28" text-anchor="middle" dominant-baseline="central" font-size="9" fill="currentColor" font-family="Outfit,sans-serif">Embedded</text></svg>
+          <span>Embedded</span>
+        </div>
+        <div class="comp-category">Structure Diagram</div>
+        <div class="comp-item" data-type="MODULE">
+          <svg width="40" height="18" viewBox="0 0 120 50"><rect x="1" y="1" width="118" height="48" fill="none" stroke="currentColor" stroke-width="1.5"/><text x="60" y="25" text-anchor="middle" dominant-baseline="central" font-size="10" fill="currentColor" font-family="Outfit,sans-serif">Module</text></svg>
+          <span>Module Box</span>
+        </div>
+        <div class="comp-hints">
+          Drag to place • Hover port dot to connect • Double-click to edit • Right-click canvas to pan • Del to remove
+        </div>
+      </div>
+    </div>
+
+    <!-- CANVAS AREA -->
+    <div id="canvas-wrapper">
+      <svg id="canvas" viewBox="0 0 3000 2000" width="3000" height="2000" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="dot-grid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="10" cy="10" r="0.75" fill="var(--canvas-grid)"/>
+          </pattern>
+          <marker id="arr" markerWidth="9" markerHeight="6" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L9,3 Z" fill="var(--text-secondary)"/>
+          </marker>
+          <marker id="arr-sel" markerWidth="9" markerHeight="6" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L9,3 Z" fill="var(--accent)"/>
+          </marker>
+          <marker id="arr-bw" markerWidth="9" markerHeight="6" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L9,3 Z" fill="#111"/>
+          </marker>
+        </defs>
+        <rect id="canvas-bg" width="3000" height="2000" fill="url(#dot-grid)"/>
+        <g id="connections-layer"></g>
+        <g id="nodes-layer"></g>
+        <path id="temp-conn" fill="none" stroke="var(--accent)" stroke-width="1.5"
+              stroke-dasharray="7 4" visibility="hidden" pointer-events="none"/>
+        <circle id="snap-ring" r="10" fill="none" stroke="var(--green)" stroke-width="2"
+                stroke-dasharray="3 2" visibility="hidden" pointer-events="none"/>
+        <rect id="sel-box" x="0" y="0" width="0" height="0"
+              fill="rgba(167,139,250,0.06)" stroke="var(--accent)" stroke-width="1"
+              stroke-dasharray="5 3" visibility="hidden" pointer-events="none"/>
+      </svg>
+
+    </div>
+
+    <!-- RESIZER -->
+    <div id="right-resizer"></div>
+
+    <!-- ZOOM CONTROLS — between resizer and right panel, moves with panel -->
+    <div id="zoom-controls">
+      <button class="zoom-btn" id="btn-zi" title="Zoom in">+</button>
+      <span class="zoom-btn zoom-label" id="zoom-label">100%</span>
+      <button class="zoom-btn" id="btn-zo" title="Zoom out">−</button>
+      <button class="zoom-btn" id="btn-zf" title="Fit to screen">=</button>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div id="right-panel">
+      <div id="rp-tabs">
+        <button class="rp-tab active" data-tab="pseudocode">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          Pseudocode
+        </button>
+        <button class="rp-tab" data-tab="console">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          Console
+        </button>
+        <button class="rp-tab" data-tab="trace">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+          Trace
+        </button>
+      </div>
+
+      <div class="rp-pane active" id="pane-pseudocode">
+        <div id="pseudo-toolbar">
+          <span class="pane-label">Generated Code</span>
+          <button class="mini-btn" id="btn-copy-pseudo">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy
+          </button>
+        </div>
+        <pre id="pseudocode-out">// Build a flowchart — pseudocode
+// will appear here automatically.
+//
+// Structure Diagrams do not
+// generate pseudocode.</pre>
+      </div>
+
+      <div class="rp-pane" id="pane-console">
+        <div id="console-out">
+          <div class="c-welcome">// CIE Flowchart Simulator</div>
+          <div class="c-welcome">// Press RUN to execute</div>
+          <div class="c-welcome">// INPUT nodes prompt for values</div>
+        </div>
+        <div id="console-input-row">
+          <span id="c-prompt">INPUT &gt;</span>
+          <input id="c-input" type="text" autocomplete="off" spellcheck="false" placeholder="Waiting..." disabled>
+          <button id="c-submit" disabled>↵</button>
+        </div>
+      </div>
+
+      <div class="rp-pane" id="pane-trace">
+        <div id="trace-wrap">
+          <div class="trace-hint">Run your flowchart to populate the trace table.</div>
+        </div>
+      </div>
+
+      <div id="rp-actions">
+        <button class="action-btn primary" id="btn-run">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>RUN
+        </button>
+        <button class="action-btn" id="btn-step">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>STEP
+        </button>
+        <button class="action-btn" id="btn-reset">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 101.5-5M3 3v6h6"/></svg>RESET
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- DRAG GHOST -->
+<svg id="drag-ghost" style="display:none;position:fixed;pointer-events:none;z-index:999;opacity:0.8;" xmlns="http://www.w3.org/2000/svg"></svg>
+
+<!-- EMBEDDED MODAL -->
+<div id="embedded-overlay" style="display:none">
+  <div id="embedded-modal">
+    <div class="modal-header">
+      <span class="modal-title">Embedded System — Local Pseudocode</span>
+      <button class="modal-close" id="embedded-close">✕</button>
+    </div>
+    <div class="modal-sub">Write the pseudocode for this module. It will be inlined in the output.</div>
+    <textarea id="embedded-editor" spellcheck="false" placeholder="// FOR i ← 1 TO n&#10;//    OUTPUT i&#10;// NEXT i"></textarea>
+    <div class="modal-footer">
+      <button class="modal-btn" id="embedded-cancel">Cancel</button>
+      <button class="modal-btn accent" id="embedded-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- INLINE TEXT EDITOR -->
+<div id="inline-edit" style="display:none"><input id="inline-input" type="text" autocomplete="off" spellcheck="false"></div>
+
+<script src="js/flowcharts.js"></script>
+</body>
+</html>

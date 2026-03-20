@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CIE Pseudocode IDE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/pseudocode.css">
+</head>
+<body>
+
+<!-- TITLE BAR -->
+<div id="titlebar">
+<div class="logo">
+    <a href="https://its-idhem.github.io/IGCSE-CompSci-Lab/" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block;">
+        <path d="M8 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9l-6-6z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M8 3v6h8" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M8 13l2 2-2 2M12 17h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>CIE Pseudocode IDE</span>
+    </a>
+  </div>
+  <div class="title-center" id="title-filename">main.txt</div>
+  <div class="title-actions">
+    <a class="title-btn" href="https://its-idhem.github.io/IGCSE-CompSci-Lab/Logic-Gates" target="_blank" rel="noopener" style="text-decoration:none">Logic Gates ↗</a>
+    <a class="title-btn" href="https://its-idhem.github.io/IGCSE-CompSci-Lab/Flowcharts" target="_blank" rel="noopener" style="text-decoration:none">Flowcharts ↗</a>
+    <button class="title-btn" onclick="downloadCode()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      Export .txt
+    </button>
+    <button class="title-btn accent" onclick="runCode()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Run
+    </button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main-content">
+  <!-- ACTIVITY BAR -->
+  <div id="activity-bar">
+    <button class="activity-btn active" onclick="switchSidebar('snippets')" id="ab-snippets" title="Snippets">
+      <span class="tooltip">Snippets</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    </button>
+    <button class="activity-btn" onclick="switchSidebar('files')" id="ab-files" title="Files">
+      <span class="tooltip">Files</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+    </button>
+    <button class="activity-btn" onclick="switchSidebar('settings')" id="ab-settings" title="Settings">
+      <span class="tooltip">Settings</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    </button>
+  </div>
+
+  <!-- SIDEBAR PANEL -->
+  <div id="sidebar-panel">
+    <!-- SNIPPETS -->
+    <div id="panel-snippets">
+      <div class="sidebar-header">Code Snippets</div>
+      <div class="sidebar-content" id="snippets-list"></div>
+    </div>
+    <!-- FILES -->
+    <div id="panel-files" style="display:none">
+      <div class="sidebar-header">Workspace</div>
+      <div class="sidebar-content">
+        <div class="snippet-category">Open Files</div>
+        <div id="sidebar-file-list"></div>
+        <div class="snippet-category" style="margin-top:12px">Actions</div>
+        <div class="snippet-item" onclick="newFile()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New File
+        </div>
+        <div class="snippet-item" onclick="downloadCode()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Download .txt
+        </div>
+        <div class="snippet-item" onclick="clearCode()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          Clear Editor
+        </div>
+      </div>
+    </div>
+    <!-- SETTINGS -->
+    <div id="panel-settings" style="display:none">
+      <div class="sidebar-header">Settings</div>
+      <div class="sidebar-content">
+        <div class="settings-item">
+          <label>Font Size</label>
+          <select class="settings-select" onchange="changeFontSize(this.value)">
+            <option value="12">12px</option>
+            <option value="13" selected>13px</option>
+            <option value="14">14px</option>
+            <option value="15">15px</option>
+            <option value="16">16px</option>
+          </select>
+        </div>
+        <div class="settings-item">
+          <label>Light Mode</label>
+          <label class="toggle"><input type="checkbox" id="light-mode-toggle" onchange="toggleLightMode(this.checked)"><span class="slider"></span></label>
+        </div>
+        <div class="settings-item">
+          <label>Auto-Save</label>
+          <label class="toggle"><input type="checkbox" id="auto-save-toggle" checked onchange="toggleAutoSave(this.checked)"><span class="slider"></span></label>
+        </div>
+        <div class="settings-item">
+          <label>Linter</label>
+          <label class="toggle"><input type="checkbox" id="linter-toggle" checked onchange="toggleLinter(this.checked)"><span class="slider"></span></label>
+        </div>
+        <div class="settings-item">
+          <label>Line Numbers</label>
+          <label class="toggle"><input type="checkbox" id="ln-toggle" checked onchange="toggleLineNumbers(this.checked)"><span class="slider"></span></label>
+        </div>
+        <div class="snippet-category" style="margin-top:12px">About</div>
+        <div style="font-size:11px;color:var(--text-muted);padding:4px 4px;line-height:1.8;">
+          CIE Pseudocode IDE<br>
+          Cambridge IGCSE™ / O Level<br>
+          Computer Science<br>
+          <span style="color:var(--accent)">Syllabus 2023–2028</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDITOR AREA -->
+  <div id="editor-area">
+    <div id="editor-tabs">
+      <div class="editor-tab active">
+        <span class="tab-dot"></span>
+        <span id="tab-filename">main.txt</span>
+      </div>
+    </div>
+    <div id="editor-container">
+      <div id="editor-inner">
+        <div id="line-numbers"></div>
+        <textarea id="code-input" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="// Write your CIE pseudocode here..."></textarea>
+        <div id="code-highlight" aria-hidden="true"></div>
+      </div>
+    </div>
+    <div id="status-bar">
+      <div class="status-item">
+        <a href="https://github.com/its-idhem" target="_blank" rel="noopener"
+           style="color:#a78bfa;text-decoration:none;font-size:10px;opacity:0.7;transition:opacity 0.15s"
+           onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">made by its-idhem</a>
+      </div>
+      <div class="status-item accent">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+        CIE Pseudocode
+      </div>
+      <div class="status-item" id="cursor-pos">Ln 1, Col 1</div>
+      <div class="status-item" id="linter-badge"></div>
+      <div style="flex:1"></div>
+      <div class="status-item" id="char-count">0 chars</div>
+    </div>
+  </div>
+
+  <!-- RESIZE HANDLE -->
+  <div id="right-resizer" title="Drag to resize"></div>
+
+  <!-- RIGHT PANEL -->
+  <div id="right-panel">
+    <div id="right-tabs">
+      <div class="right-tab active" onclick="switchRightTab('console')" id="rt-console">Console</div>
+      <div class="right-tab" onclick="switchRightTab('trace')" id="rt-trace">Trace Table</div>
+    </div>
+    <div id="right-content">
+      <!-- CONSOLE -->
+      <div class="right-pane active" id="pane-console">
+        <div id="console-output">
+          <div class="console-welcome">
+            <div class="welcome-title">// CIE Pseudocode IDE ready</div>
+            <div>// Press RUN or Ctrl+Enter to execute</div>
+            <div>// INPUT will prompt for values</div>
+          </div>
+        </div>
+        <div id="input-form">
+          <span id="input-prompt-label">INPUT &gt;</span>
+          <input id="input-field" type="text" autocomplete="off" spellcheck="false">
+          <button id="input-submit">Enter</button>
+        </div>
+      </div>
+      <!-- TRACE TABLE -->
+      <div class="right-pane" id="pane-trace">
+        <div id="trace-container">
+          <div class="trace-hint">Run your code to populate the trace table.</div>
+        </div>
+      </div>
+    </div>
+    <div id="action-bar">
+      <button class="action-btn" id="btn-run" onclick="runCode()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        RUN
+      </button>
+      <button class="action-btn" id="btn-step" onclick="stepCode()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+        STEP
+      </button>
+      <button class="action-btn" id="btn-reset" onclick="resetExecution()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 101.5-5M3 3v6h6"/></svg>
+        RESET
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- INPUT MODAL -->
+<div id="input-modal-overlay">
+  <div id="input-modal">
+    <h3>INPUT Required</h3>
+    <p id="modal-var-name">Enter value for: <span id="modal-var"></span></p>
+    <input id="modal-input" type="text" autocomplete="off" spellcheck="false" placeholder="Type your value...">
+    <button id="modal-submit">Submit</button>
+  </div>
+</div>
+
+<script src="js/pseudocode.js"></script>
+</body>
+</html>
