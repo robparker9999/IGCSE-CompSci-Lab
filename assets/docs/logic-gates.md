@@ -22,7 +22,7 @@ The output is always the opposite of the input.
 | 0 | 1 |
 | 1 | 0 |
 
-"LINK FOR NOT COMPONENT IMAGE HERE"
+![NOT Gate](../img/NOT-Gate.png)
 
 ### AND Gate
 The output is True only if **both** inputs are True.
@@ -35,7 +35,7 @@ The output is True only if **both** inputs are True.
 | 1 | 0 | 0 |
 | 1 | 1 | 1 |
 
-"LINK FOR AND COMPONENT IMAGE HERE"
+![AND Gate](../img/AND-Gate.png)
 
 ### OR Gate
 The output is True if **at least one** input is True.
@@ -48,7 +48,7 @@ The output is True if **at least one** input is True.
 | 1 | 0 | 1 |
 | 1 | 1 | 1 |
 
-"LINK FOR OR COMPONENT IMAGE HERE"
+![OR Gate](../img/OR-Gate.png)
 
 ### NAND Gate (Not AND)
 The opposite of an AND gate. The output is False only if **both** inputs are True.
@@ -61,7 +61,7 @@ The opposite of an AND gate. The output is False only if **both** inputs are Tru
 | 1 | 0 | 1 |
 | 1 | 1 | 0 |
 
-"LINK FOR NAND COMPONENT IMAGE HERE"
+![NAND Gate](../img/NAND-Gate.png)
 
 ### NOR Gate (Not OR)
 The opposite of an OR gate. The output is True only if **both** inputs are False.
@@ -74,7 +74,7 @@ The opposite of an OR gate. The output is True only if **both** inputs are False
 | 1 | 0 | 0 |
 | 1 | 1 | 0 |
 
-"LINK FOR NOR COMPONENT IMAGE HERE"
+![NOR Gate](../img/NOR-Gate.png)
 
 ### XOR Gate (Exclusive OR)
 The output is True if the inputs are **different**.
@@ -87,7 +87,7 @@ The output is True if the inputs are **different**.
 | 1 | 0 | 1 |
 | 1 | 1 | 0 |
 
-"LINK FOR XOR COMPONENT IMAGE HERE"
+![XOR Gate](../img/XOR-Gate.png)
 
 ---
 
