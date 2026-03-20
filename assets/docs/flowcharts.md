@@ -41,7 +41,7 @@ Loops are created by drawing a flow line that points back to an earlier part of 
 * **Pre-condition (WHILE)**: The decision diamond appears *before* the process.
 * **Post-condition (REPEAT)**: The decision diamond appears *after* the process.
 
-![Flowchart Loops](../img/.flowchart-loops.png)
+![Flowchart Loops](../img/flowchart-loops.png.png)
 
 ---
 
