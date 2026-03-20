@@ -3,7 +3,7 @@
 A comprehensive, web-based suite of interactive tools designed specifically for the **CIE IGCSE Computer Science (0478/0984)** curriculum. This lab provides students and educators with a professional-grade environment to experiment with logic gates, practice pseudocode, and design flowcharts using official syllabus notation.
 
 ## Live Demo
-[Visit My website here!](file:///C:/Users/mehdi/OneDrive/Desktop/coding%20shirt/IGCSE-CompSci-Lab/src/index.html)
+**[here!](file:///C:/Users/mehdi/OneDrive/Desktop/coding%20shirt/IGCSE-CompSci-Lab/src/index.html)**
 
 ## Features
 
@@ -67,4 +67,6 @@ A flexible canvas for creating algorithms visually.
 3.  Open `http://localhost:3000` in your browser.
 
 ## License
-This project is open-source and intended for educational purposes. Feel free to fork and adapt for your classroom or personal study. I worked really hard on this and I hope it helps you!!
+This project is open-source and intended for educational purposes. Feel free to fork and adapt for your classroom or personal study. 
+
+*I worked really hard on this and I hope it helps you!!*
