@@ -20,12 +20,12 @@ Flowcharts use specific shapes to represent different types of instructions. Sta
 
 | Symbol | Name | Description |
 | :--- | :--- | :--- |
-| "LINK FOR TERMINATOR SYMBOL HERE" | **Terminator** | Represents the **START** and **STOP** of an algorithm. |
-| "LINK FOR PROCESS SYMBOL HERE" | **Process** | Used for internal operations like assignments or calculations (e.g., `Count ← Count + 1`). |
-| "LINK FOR INPUT/OUTPUT SYMBOL HERE" | **Input / Output** | Represents data entering the system (`INPUT`) or being displayed (`OUTPUT`). |
-| "LINK FOR DECISION SYMBOL HERE" | **Decision** | A diamond shape used for `IF` conditions or loops. Usually has two exits: **Yes** and **No**. |
-| "LINK FOR SUBROUTINE SYMBOL HERE" | **Pre-defined Process** | Represents a call to a separate procedure or function. |
-| "LINK FOR LINE SYMBOL HERE" | **Flow Line** | Arrows that show the direction of the program flow. |
+| ![Terminators](../img/terminators.png) | **Terminator** | Represents the **START** and **STOP** of an algorithm. |
+| ![Process](../img/process.png) | **Process** | Used for internal operations like assignments or calculations (e.g., `Count ← Count + 1`). |
+| ![Input Output](../img/input-output.png) | **Input / Output** | Represents data entering the system (`INPUT`) or being displayed (`OUTPUT`). |
+| ![Decision](../img/decision.png) | **Decision** | A diamond shape used for `IF` conditions or loops. Usually has two exits: **Yes** and **No**. |
+| ![Subroutine](../img/subroutine.png) | **Subroutine** | Represents a call to a separate procedure or function. |
+| !![Flow Line](../img/flow-line.png) | **Flow Line** | Arrows that show the direction of the program flow. |
 
 ---
 
