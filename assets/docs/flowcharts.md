@@ -25,7 +25,7 @@ Flowcharts use specific shapes to represent different types of instructions. Sta
 | ![Input Output](../img/input-output.png) | **Input / Output** | Represents data entering the system (`INPUT`) or being displayed (`OUTPUT`). |
 | ![Decision](../img/decision.png) | **Decision** | A diamond shape used for `IF` conditions or loops. Usually has two exits: **Yes** and **No**. |
 | ![Subroutine](../img/subroutine.png) | **Subroutine** | Represents a call to a separate procedure or function. |
-| !![Flow Line](../img/flow-line.png) | **Flow Line** | Arrows that show the direction of the program flow. |
+| ![Flow Line](../img/flow-line.png) | **Flow Line** | Arrows that show the direction of the program flow. |
 
 ---
 
