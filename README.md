@@ -3,7 +3,7 @@
 A comprehensive, web-based suite of interactive tools designed specifically for the **CIE IGCSE Computer Science (0478/0984)** curriculum. This lab provides students and educators with a professional-grade environment to experiment with logic gates, practice pseudocode, and design flowcharts using official syllabus notation.
 
 ## Live Demo
-You can visit the website **[here!](https://its-idhem.github.io/IGCSE-CompSci-Lab/)**
+You can visit the website **[here!](https://robparker9999.github.io/IGCSE-CompSci-Lab/)**
 
 ## Features
 
