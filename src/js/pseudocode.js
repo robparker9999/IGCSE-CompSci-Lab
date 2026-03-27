@@ -473,13 +473,13 @@ codeInput.addEventListener('keydown', e => {
   // Ctrl+Enter = Run
   if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); runCode(); }
   // Auto-close brackets and quotes
-  const pairs = { '(': ')', '[': ']', '{': '}', '"': '"' };
+  const pairs = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'" };
   if (pairs[e.key]) {
     e.preventDefault();
     const s = codeInput.selectionStart, en = codeInput.selectionEnd;
     const selected = codeInput.value.slice(s, en);
     // For quotes: if cursor is sitting on a closing quote, skip over it instead of wrapping
-    if (e.key === '"' && selected.length === 0 && codeInput.value[s] === '"') {
+    if ((e.key === '"' || e.key === "'") && selected.length === 0 && codeInput.value[s] === e.key) {
       codeInput.selectionStart = codeInput.selectionEnd = s + 1;
       updateEditor();
       return;
@@ -648,6 +648,8 @@ function _traceCommit() {
 function traceVar(lineNum, name, val) {
   if (!traceColOrder.includes(name)) traceColOrder.push(name);
   const valStr = (val === null || val === undefined) ? '' : String(val);
+  // Don't create a trace row when a variable is cleared to an empty string
+  if (valStr === '') return;
 // Commit the buffer if this variable is already in the current open row
   if (_traceCurrent && Object.prototype.hasOwnProperty.call(_traceCurrent.vars, name)) {
     _traceCommit();
@@ -1517,12 +1519,31 @@ function buildTraceTable() {
 }
 
 // ── Multi-file tab system ─────────────────────────────────────
+function manualSave() {
+  saveCurrentFile();
+  // Brief visual feedback on the Save button
+  const btn = [...document.querySelectorAll('.title-btn')].find(b => b.textContent.includes('Save'));
+  if (btn) {
+    const orig = btn.innerHTML;
+    btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Saved!`;
+    btn.style.color = 'var(--green, #4ade80)';
+    setTimeout(() => { btn.innerHTML = orig; btn.style.color = ''; }, 1500);
+  }
+}
+
 function saveCurrentFile() {
   const cur = files.find(f => f.id === activeFileId);
-  if (cur) {
-    cur.content = codeInput.value;
-    if (cur.id === 1) localStorage.setItem('cie_code', cur.content);
-  }
+  if (cur) cur.content = codeInput.value;
+  // Persist the full workspace so all files, names and the active tab survive reload
+  try {
+    localStorage.setItem('cie_workspace', JSON.stringify({
+      files,
+      activeFileId,
+      nextFileId
+    }));
+    // Keep the legacy key in sync so old code reading it still works
+    if (cur && cur.id === 1) localStorage.setItem('cie_code', cur.content);
+  } catch (_) { /* storage quota exceeded – silently ignore */ }
 }
 
 function renameFile(id) {
@@ -1770,8 +1791,7 @@ function toggleLightMode(val)   { document.body.classList.toggle('light-mode', v
 // ── INIT ─────────────────────────────────────────────────────
 function init() {
   buildSnippets();
-  // Initialise file system
-  const saved = localStorage.getItem('cie_code');
+  // Initialise file system — restore full workspace if available
   const defaultContent = `// Welcome to CIE Pseudocode IDE
 // Cambridge IGCSE / O Level Computer Science
 
@@ -1796,14 +1816,35 @@ OUTPUT "Student: ", Name
 OUTPUT "Score: ", Score
 OUTPUT "Grade: ", Grade`;
 
-  files = [{ id: 1, name: 'main.txt', content: saved || defaultContent }];
-  activeFileId = 1; nextFileId = 2;
-  codeInput.value = files[0].content;
+  let workspaceLoaded = false;
+  try {
+    const raw = localStorage.getItem('cie_workspace');
+    if (raw) {
+      const ws = JSON.parse(raw);
+      if (Array.isArray(ws.files) && ws.files.length > 0) {
+        files        = ws.files;
+        activeFileId = ws.activeFileId || ws.files[0].id;
+        nextFileId   = ws.nextFileId   || (Math.max(...ws.files.map(f => f.id)) + 1);
+        workspaceLoaded = true;
+      }
+    }
+  } catch (_) { /* corrupted storage — fall through to default */ }
+
+  if (!workspaceLoaded) {
+    // Fall back to legacy single-file key, then to hard-coded default
+    const legacySaved = localStorage.getItem('cie_code');
+    files        = [{ id: 1, name: 'main.txt', content: legacySaved || defaultContent }];
+    activeFileId = 1;
+    nextFileId   = 2;
+  }
+  const activeFile = files.find(f => f.id === activeFileId) || files[0];
+  codeInput.value = activeFile.content;
   renderTabs();
   updateEditor();
 
   document.addEventListener('keydown', e => {
     if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); runCode(); }
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); manualSave(); }
     if (e.key === 'Escape') document.getElementById('input-modal-overlay').classList.remove('visible');
   });
 

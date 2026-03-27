@@ -7,7 +7,7 @@
 const GATES = {
   AND:    { w:80,  h:56, inPts:[{x:0,y:16},{x:0,y:40}], outPt:{x:80,y:28}  },
   OR:     { w:80,  h:56, inPts:[{x:0,y:16},{x:0,y:40}], outPt:{x:80,y:28}  },
-  NOT:    { w:72,  h:44, inPts:[{x:0,y:22}],             outPt:{x:72,y:22}  },
+  NOT:    { w:72,  h:44, inPts:[{x:-14,y:22}],            outPt:{x:72,y:22}  },
   NAND:   { w:90,  h:56, inPts:[{x:0,y:16},{x:0,y:40}], outPt:{x:90,y:28}  },
   NOR:    { w:90,  h:56, inPts:[{x:0,y:16},{x:0,y:40}], outPt:{x:90,y:28}  },
   XOR:    { w:80,  h:56, inPts:[{x:0,y:16},{x:0,y:40}], outPt:{x:80,y:28}  },
@@ -152,7 +152,7 @@ function drawBody(g,comp){
   else if(t==='NOT'){
     fill('M 4,4 L 52,22 L 4,40 Z');
     bubble(57,22,5);
-    stub(0,22,4,22); stub(62,22,72,22);
+    stub(-14,22,4,22); stub(62,22,72,22);
     g.appendChild(txt('text',{x:22,y:22,class:'comp-label'},'NOT'));
   }
   else if(t==='XOR'){
@@ -329,7 +329,11 @@ function buildExpression(){
       default:    return'?';
     }
   }
-  bar.textContent=outs.map(c=>`${c.label||'X'} = ${exprFor(c.id,0)}`).join('    ');
+  bar.textContent=outs.map(c=>{
+    let expr=exprFor(c.id,0);
+    if(expr.startsWith('(')&&expr.endsWith(')'))expr=expr.slice(1,-1);
+    return`${c.label||'X'} = ${expr}`;
+  }).join('    ');
 }
 
 // ── RENDER ────────────────────────────────────────────────────
@@ -919,7 +923,7 @@ function exportPNG(){
     }
     else if(t==='NOT'){
       ctx.beginPath();ctx.moveTo(4,4);ctx.lineTo(52,22);ctx.lineTo(4,40);ctx.closePath();outline();
-      dot(57,22,5);stub(0,22,4,22);stub(62,22,72,22);
+      dot(57,22,5);stub(-14,22,4,22);stub(62,22,72,22);
     }
     else if(t==='XOR'){
       ctx.beginPath();ctx.moveTo(12,4);ctx.bezierCurveTo(28,4,58,10,66,28);ctx.bezierCurveTo(58,46,28,52,12,52);ctx.bezierCurveTo(22,36,22,20,12,4);ctx.closePath();outline();
