@@ -778,3 +778,158 @@ select.settings-select {
 #linter-badge.ok { color: var(--green); }
 #linter-badge.warn { color: var(--yellow); }
 #linter-badge.err { color: var(--red); }
+
+/* ======================================================
+   RESPONSIVE — TABLET & MOBILE
+   ====================================================== */
+
+/* ---- Tablet: up to 1024px ---- */
+@media (max-width: 1024px) {
+  #sidebar-panel { width: 180px; }
+  #right-panel { width: 260px; min-width: 180px; }
+
+  /* Hide external nav links to save titlebar space */
+  a.title-btn { display: none; }
+}
+
+@media (max-width: 860px) {
+  #sidebar-panel { width: 0; }
+  #sidebar-panel.collapsed { width: 0; }
+}
+
+/* ---- Mobile: ≤ 640px ---- */
+@media (max-width: 640px) {
+
+  /* TITLEBAR — taller for touch, simplified */
+  #titlebar {
+    height: 46px;
+    padding: 0 10px;
+    gap: 8px;
+  }
+  /* Hide logo text, keep icon */
+  #titlebar .logo span { display: none; }
+  /* Hide filename in center */
+  .title-center { display: none; }
+  /* Hide Save, Export, Logic Gates, Flowcharts — keep only Run */
+  .title-actions .title-btn:not(.accent) { display: none; }
+  .title-btn.accent { padding: 7px 16px; font-size: 12px; }
+
+  /* MAIN CONTENT — adjusted for taller titlebar + bottom nav */
+  #main-content {
+    margin-top: 46px;
+    height: calc(100dvh - 46px - 50px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Hide desktop-only chrome */
+  #activity-bar { display: none; }
+  #right-resizer { display: none; }
+
+  /* EDITOR — takes all available space */
+  #editor-area {
+    width: 100%;
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Status bar: hide less important items */
+  #status-bar .status-item:first-child { display: none; }
+  #char-count { display: none; }
+
+  /* SIDEBAR PANEL — full-screen overlay when active */
+  #sidebar-panel {
+    position: fixed !important;
+    top: 46px;
+    left: 0;
+    right: 0;
+    bottom: 50px;
+    width: 100% !important;
+    z-index: 60;
+    display: none !important;
+    transition: none !important;
+  }
+  #sidebar-panel.mobile-visible { display: flex !important; }
+
+  /* RIGHT PANEL — full-screen overlay when active */
+  #right-panel {
+    position: fixed !important;
+    top: 46px;
+    left: 0;
+    right: 0;
+    bottom: 50px;
+    width: 100% !important;
+    min-width: 0;
+    max-width: none;
+    z-index: 60;
+    display: none !important;
+  }
+  #right-panel.mobile-visible { display: flex !important; }
+
+  /* Bigger touch targets in action bar */
+  #action-bar { padding: 10px 12px; gap: 10px; }
+  .action-btn { padding: 13px 8px; font-size: 13px; }
+  .action-btn svg { width: 16px; height: 16px; }
+
+  /* Editor font comfortable on small screens */
+  #code-input, #code-highlight { font-size: 14px; }
+  #line-numbers { font-size: 13px; }
+
+  /* Input modal fits phone width */
+  #input-modal { width: calc(100vw - 32px); }
+  #modal-input { font-size: 16px; } /* prevents iOS zoom on focus */
+  #input-field { font-size: 16px; } /* same */
+
+  /* Show the mobile bottom nav */
+  #mobile-nav { display: flex; }
+
+  /* Snippets sidebar: make items bigger for touch */
+  .snippet-item { padding: 10px 8px; font-size: 13px; }
+  .settings-item { padding: 12px 4px; }
+  .toggle { width: 40px; height: 22px; }
+  .toggle .slider:before { width: 16px; height: 16px; }
+  input:checked + .slider:before { transform: translateX(18px); }
+}
+
+/* ======================================================
+   MOBILE BOTTOM NAV BAR
+   ====================================================== */
+#mobile-nav {
+  display: none; /* hidden on desktop; shown via media query above */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: var(--bg-sidebar);
+  border-top: 1px solid var(--border);
+  z-index: 200;
+  align-items: stretch;
+}
+
+.mobile-nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  transition: color var(--transition), background var(--transition);
+  -webkit-tap-highlight-color: transparent;
+  padding: 4px 0;
+}
+.mobile-nav-btn svg { width: 20px; height: 20px; }
+.mobile-nav-btn.active {
+  color: var(--accent);
+  background: var(--accent-glow);
+}
+.mobile-nav-btn:active { opacity: 0.75; }

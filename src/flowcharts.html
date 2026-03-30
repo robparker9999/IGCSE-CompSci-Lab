@@ -8,6 +8,111 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/flowcharts.css">
+<style>
+/* ── Green theme override ───────────────────── */
+:root {
+  --accent:       #22c55e;
+  --accent-hover: #16a34a;
+  --accent-dim:   rgba(34,197,94,0.12);
+  --green:        #86efac;
+}
+body.light-mode {
+  --accent:       #16a34a;
+  --accent-hover: #15803d;
+  --accent-dim:   rgba(22,163,74,0.12);
+  --green:        #22c55e;
+}
+
+/* ── Trash-zone highlight on left sidebar ───── */
+#left-sidebar.trash-hover {
+  background: rgba(239,68,68,0.12) !important;
+  border-right-color: #ef4444 !important;
+  transition: background 0.15s, border-color 0.15s;
+}
+#left-sidebar.trash-hover::after {
+  content: '🗑 Release to delete';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 10px;
+  font-size: 11px;
+  color: #ef4444;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  pointer-events: none;
+}
+#left-sidebar { position: relative; }
+
+/* ── Mobile responsive ──────────────────────── */
+@media (max-width: 900px) {
+  /* Show mobile sidebar toggle */
+  #btn-mobile-sidebar { display: flex !important; }
+
+  /* Shrink / hide the title center text */
+  .title-center { display: none; }
+
+  /* Left sidebar: hidden by default on mobile, slides in */
+  #left-sidebar {
+    position: fixed !important;
+    top: 0; left: 0; bottom: 0;
+    z-index: 200;
+    transform: translateX(-100%);
+    transition: transform 0.22s cubic-bezier(0.4,0,0.2,1);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.4);
+  }
+  #left-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Right panel: collapsed by default on small screens */
+  #right-panel { display: none !important; }
+  #right-resizer { display: none !important; }
+  #zoom-controls { right: 12px !important; }
+  #btn-open-panel { display: none !important; }
+
+  /* Canvas wrapper fills remaining space */
+  #workspace { position: relative; }
+  #canvas-wrapper { width: 100% !important; }
+
+  /* Titlebar layout: logo left, actions right */
+  #titlebar { padding: 0 10px; gap: 8px; }
+  .title-actions { gap: 6px; }
+  .title-btn { padding: 5px 8px; font-size: 11px; }
+
+  /* Make port dots larger for touch */
+  .port-dot { r: 7; }
+  .port-hit  { r: 14; }
+
+  /* Mobile panel — slide-up sheet for Run/pseudocode on phone */
+  #mobile-run-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 150;
+    background: var(--surface, #1a1a1a);
+    border-top: 1px solid var(--border, #2a2a2a);
+    padding: 8px 12px;
+    gap: 8px;
+    justify-content: flex-end;
+    align-items: center;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Extra-compact titlebar on phones */
+  #titlebar .logo span { display: none; }
+  .title-actions .title-btn:not(#btn-theme):not(#btn-mobile-sidebar) { display: none; }
+  #btn-export-png, #btn-clear { display: none !important; }
+}
+
+/* Mobile run bar (always hidden on desktop, shown on mobile) */
+#mobile-run-bar { display: none; }
+</style>
 </head>
 <body>
 
@@ -23,6 +128,9 @@
     </svg>
    CIE Flowchart Lab
   </a>
+  <button class="title-btn" id="btn-mobile-sidebar" style="display:none" title="Toggle symbols panel">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
   <div class="title-center">IGCSE Computer Science — Flowchart &amp; Structure Diagram</div>
   <div class="title-actions">
     <a class="title-btn" href="pseudocode.html" style="text-decoration:none">Pseudocode ↗</a>
@@ -117,7 +225,7 @@
         <circle id="snap-ring" r="10" fill="none" stroke="var(--green)" stroke-width="2"
                 stroke-dasharray="3 2" visibility="hidden" pointer-events="none"/>
         <rect id="sel-box" x="0" y="0" width="0" height="0"
-              fill="rgba(167,139,250,0.06)" stroke="var(--accent)" stroke-width="1"
+              fill="rgba(34,197,94,0.06)" stroke="var(--accent)" stroke-width="1"
               stroke-dasharray="5 3" visibility="hidden" pointer-events="none"/>
       </svg>
 
@@ -239,6 +347,19 @@
 </div>
 
 <a href="https://github.com/its-idhem" class="made-by-link">made by its-idhem</a>
+
+<!-- MOBILE RUN BAR (shown on small screens) -->
+<div id="mobile-run-bar">
+  <button class="action-btn" id="mob-btn-reset" style="padding:8px 14px;font-size:12px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M3 12a9 9 0 101.5-5M3 3v6h6"/></svg>RESET
+  </button>
+  <button class="action-btn" id="mob-btn-step" style="padding:8px 14px;font-size:12px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>STEP
+  </button>
+  <button class="action-btn primary" id="mob-btn-run" style="padding:8px 18px;font-size:12px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polygon points="5 3 19 12 5 21 5 3"/></svg>RUN
+  </button>
+</div>
 
 <script src="js/flowcharts.js"></script>
 </body>

@@ -8,9 +8,9 @@
   --bg-sidebar:    #0a0a0f;
   --bg-hover:      #1a1a24;
   --bg-active:     #1e1e2e;
-  --accent:        #a78bfa;
-  --accent-dim:    rgba(167,139,250,0.15);
-  --accent-glow:   rgba(167,139,250,0.15);
+  --accent:        #67e8f9;
+  --accent-dim:    rgba(103,232,249,0.15);
+  --accent-glow:   rgba(103,232,249,0.15);
   --green:         #22c55e;
   --green-dim:     rgba(34,197,94,0.15);
   --red:           #f87171;
@@ -20,13 +20,13 @@
   --text-secondary:#94a3b8;
   --text-muted:    #475569;
   --border:        rgba(148,163,184,0.08);
-  --border-bright: rgba(167,139,250,0.2);
-  --scrollbar:     rgba(100,100,140,0.2);
+  --border-bright: rgba(103,232,249,0.2);
+  --scrollbar:     rgba(0,180,200,0.2);
   --font-mono:     'JetBrains Mono','Fira Code',monospace;
   --font-ui:       'Outfit',sans-serif;
   --radius:        6px;
   --transition:    0.15s cubic-bezier(0.4,0,0.2,1);
-  --wire-dead:     #7c3aed;
+  --wire-dead:     #0e7490;
   --wire-live:     #22c55e;
   --canvas-grid:   rgba(148,163,184,0.06);
 }
@@ -36,11 +36,11 @@ body.light-mode {
   --bg-panel:      #f0f0f5;
   --bg-editor:     #ffffff;
   --bg-sidebar:    #e8e8f0;
-  --bg-hover:      #ede9fb;   /* purple-tinted hover */
-  --bg-active:     #d8d8ee;
-  --accent:        #7c3aed;
-  --accent-dim:    rgba(124,58,237,0.12);
-  --accent-glow:   rgba(124,58,237,0.15);
+  --bg-hover:      #e0f9fc;   /* cyan-tinted hover */
+  --bg-active:     #cff3f8;
+  --accent:        #0891b2;
+  --accent-dim:    rgba(8,145,178,0.12);
+  --accent-glow:   rgba(8,145,178,0.15);
   --green:         #15803d;
   --green-dim:     rgba(21,128,61,0.12);
   --red:           #dc2626;
@@ -50,9 +50,9 @@ body.light-mode {
   --text-secondary:#4a4a6a;
   --text-muted:    #7a7a9a;
   --border:        rgba(0,0,0,0.08);
-  --border-bright: rgba(124,58,237,0.25);
+  --border-bright: rgba(8,145,178,0.25);
   --scrollbar:     rgba(0,0,0,0.12);
-  --wire-dead:     #7c3aed;
+  --wire-dead:     #0891b2;
   --wire-live:     #15803d;
   --canvas-grid:   rgba(0,0,50,0.05);
 }
@@ -132,7 +132,7 @@ html,body {
 }
 /* Light mode: purple hover */
 body.light-mode .comp-item:hover {
-  background:rgba(124,58,237,0.12); border-color:var(--accent); color:var(--accent);
+  background:rgba(8,145,178,0.12); border-color:var(--accent); color:var(--accent);
 }
 .comp-item:active { cursor:grabbing; }
 
@@ -369,4 +369,188 @@ body.light-mode .comp-item:hover {
   z-index:500;
   pointer-events:none;
   box-shadow:0 8px 32px rgba(0,0,0,0.4);
+}
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE / TOUCH SUPPORT
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── TOUCH RESETS ─────────────────────────────────────────────── */
+* { -webkit-tap-highlight-color: transparent; }
+#canvas-wrapper { touch-action: none; }
+.port-circle, .comp-group { touch-action: none; }
+#canvas { touch-action: none; }
+
+/* ── PLACE-MODE HINT BAR ──────────────────────────────────────── */
+#place-hint {
+  display: none;
+  position: fixed;
+  top: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: #000c10;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-ui);
+  padding: 6px 18px;
+  border-radius: 20px;
+  z-index: 500;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 2px 12px rgba(103,232,249,0.4);
+}
+#place-hint.visible { display: block; }
+
+/* ── MOBILE BACKDROP ─────────────────────────────────────────── */
+#mobile-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 140;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+#mobile-backdrop.visible { display: block; }
+
+/* ── MOBILE NAV (injected by JS) ─────────────────────────────── */
+#mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 300;
+  gap: 6px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-bright);
+  border-radius: 28px;
+  padding: 5px 8px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  align-items: center;
+}
+.mobile-nav-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 7px 14px;
+  border-radius: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: var(--transition);
+  white-space: nowrap;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.mobile-nav-btn svg { flex-shrink: 0; }
+.mobile-nav-btn.active {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.mobile-nav-btn:active { opacity: 0.7; }
+
+/* Drag handle pill on bottom sheets */
+.sidebar-drag-handle {
+  display: none;
+  width: 36px; height: 4px;
+  background: var(--border-bright);
+  border-radius: 2px;
+  margin: 0 auto 0;
+  flex-shrink: 0;
+}
+
+/* ── TABLET (≤ 900px) ─────────────────────────────────────────── */
+@media (max-width: 900px) {
+  #left-sidebar  { width: 160px; }
+  #right-sidebar { width: 200px; }
+  .title-center  { display: none; }
+}
+
+/* ── MOBILE (≤ 640px) ─────────────────────────────────────────── */
+@media (max-width: 640px) {
+  /* Titlebar: keep logo + critical actions, hide text labels */
+  .title-center { display: none; }
+  .title-btn-label { display: none; } /* added by JS to Export/Clear text */
+  #attr-link { display: none; }
+
+  /* Sidebars become slide-up bottom sheets */
+  #left-sidebar, #right-sidebar {
+    position: fixed !important;
+    bottom: 0; left: 0; right: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: 52vh;
+    min-height: 220px;
+    z-index: 150;
+    border: none;
+    border-top: 1px solid var(--border-bright);
+    border-radius: 16px 16px 0 0;
+    transform: translateY(110%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #left-sidebar.mobile-open,
+  #right-sidebar.mobile-open {
+    transform: translateY(0);
+  }
+
+  /* Drag handle visible on mobile */
+  .sidebar-drag-handle { display: block; margin: 8px auto 0; }
+
+  /* Sidebar header adjustments for mobile */
+  .sidebar-header {
+    padding: 6px 16px 8px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  /* Canvas takes full width, no sidebars inline */
+  #workspace { position: relative; }
+  #sidebar-resizer { display: none; }
+
+  /* Canvas area — full height minus titlebar and expression bar */
+  #canvas-wrapper { flex: 1; }
+
+  /* Mobile nav bar visible */
+  #mobile-nav { display: flex; }
+
+  /* Expression bar: compact */
+  #expression-bar { padding: 0 10px; gap: 6px; height: 34px; }
+  .expr-label { display: none; }
+  #expression-text { font-size: 11px; }
+
+  /* Zoom controls: anchored to bottom-right of canvas */
+  #zoom-controls {
+    right: 12px !important;
+    bottom: 42px;
+  }
+
+  /* Larger touch targets for ports (scale up visually) */
+  .port-circle { r: 7; }
+  /* Compensate with CSS transform so layout doesn't shift */
+  .port-in, .port-out { transform-box: fill-box; transform-origin: center; }
+
+  /* Title buttons — icon only on very small screens */
+  #btn-export .export-label,
+  #btn-clear  .clear-label  { display: none; }
+
+  /* Component items slightly taller for easier tapping */
+  .comp-item { padding: 8px 6px; }
+
+  /* Truth table: scrollable with slightly smaller font */
+  #truth-table-container { overflow: auto; }
+  .truth-table { font-size: 11px; }
+  .truth-table th, .truth-table td { padding: 5px 8px; }
+}
+
+/* Extra small phones */
+@media (max-width: 400px) {
+  .title-btn { padding: 3px 6px; font-size: 10px; }
+  #titlebar { gap: 8px; padding: 0 8px; }
 }

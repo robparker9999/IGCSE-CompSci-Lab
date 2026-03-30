@@ -30,7 +30,7 @@ A flexible canvas for creating algorithms visually.
 * **Export Options:** Save your diagrams as a PNG for assignments.
 * **Embedded Pseudocode:** Ability to attach pseudocode logic to specific modules.
 
-## 📁 Project Structure
+## 📁 Project Structure (for main pages)
 
 ```text
 .

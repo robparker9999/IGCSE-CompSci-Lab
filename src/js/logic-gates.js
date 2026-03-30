@@ -7,7 +7,7 @@
 const GATES = {
   AND:    { w:80,  h:56, inPts:[{x:0,y:16},{x:0,y:40}], outPt:{x:80,y:28}  },
   OR:     { w:80,  h:56, inPts:[{x:0,y:16},{x:0,y:40}], outPt:{x:80,y:28}  },
-  NOT:    { w:72,  h:44, inPts:[{x:-14,y:22}],            outPt:{x:72,y:22}  },
+  NOT:    { w:72,  h:44, inPts:[{x:0,y:22}],             outPt:{x:72,y:22}  },
   NAND:   { w:90,  h:56, inPts:[{x:0,y:16},{x:0,y:40}], outPt:{x:90,y:28}  },
   NOR:    { w:90,  h:56, inPts:[{x:0,y:16},{x:0,y:40}], outPt:{x:90,y:28}  },
   XOR:    { w:80,  h:56, inPts:[{x:0,y:16},{x:0,y:40}], outPt:{x:80,y:28}  },
@@ -72,6 +72,8 @@ let panning     = null;  // {sx,sy} right-click pan start
 let resizing    = null;  // {id, ox, oy, ow, oh} comment resize
 let selBox      = null;  // {x0,y0,x1,y1} rubber-band
 let justBoxSelected = false; // prevents the post-mouseup click from clearing selection
+let placingType = null;  // mobile: type string of component being placed
+let pinchStart  = null;  // {dist, zoom} for pinch-to-zoom
 
 // ── ZOOM ──────────────────────────────────────────────────────
 let zoom = 1;
@@ -152,7 +154,7 @@ function drawBody(g,comp){
   else if(t==='NOT'){
     fill('M 4,4 L 52,22 L 4,40 Z');
     bubble(57,22,5);
-    stub(-14,22,4,22); stub(62,22,72,22);
+    stub(0,22,4,22); stub(62,22,72,22);
     g.appendChild(txt('text',{x:22,y:22,class:'comp-label'},'NOT'));
   }
   else if(t==='XOR'){
@@ -329,11 +331,7 @@ function buildExpression(){
       default:    return'?';
     }
   }
-  bar.textContent=outs.map(c=>{
-    let expr=exprFor(c.id,0);
-    if(expr.startsWith('(')&&expr.endsWith(')'))expr=expr.slice(1,-1);
-    return`${c.label||'X'} = ${expr}`;
-  }).join('    ');
+  bar.textContent=outs.map(c=>`${c.label||'X'} = ${exprFor(c.id,0)}`).join('    ');
 }
 
 // ── RENDER ────────────────────────────────────────────────────
@@ -413,7 +411,7 @@ function _syncSelectionClasses(){
 
 // ── ATTACH COMPONENT EVENTS ───────────────────────────────────
 function attachCompEvents(g,comp){
-  // Output port → start wire
+  // Output port → start wire (mouse)
   g.querySelectorAll('.port-out').forEach(p=>{
     p.addEventListener('mousedown',e=>{
       e.stopPropagation();e.preventDefault();
@@ -425,6 +423,19 @@ function attachCompEvents(g,comp){
       tw.setAttribute('d',wirePath(drawingWire.x1,drawingWire.y1,pt.x,pt.y));
       clearSelection();
     });
+    // Output port → start wire (touch)
+    p.addEventListener('touchstart',e=>{
+      e.stopPropagation();e.preventDefault();
+      panning=null;
+      const def=GATES[comp.type];
+      const touch=e.touches[0];
+      const pt=svgPt(touch);
+      drawingWire={fromId:comp.id,x1:comp.x+def.outPt.x,y1:comp.y+def.outPt.y};
+      const tw=document.getElementById('temp-wire');
+      tw.setAttribute('visibility','visible');
+      tw.setAttribute('d',wirePath(drawingWire.x1,drawingWire.y1,pt.x,pt.y));
+      clearSelection();
+    },{passive:false});
   });
 
   // Comment resize handle
@@ -499,6 +510,27 @@ function attachCompEvents(g,comp){
       moved:false,
     };
   });
+  // Whole group touchstart → drag (touch)
+  g.addEventListener('touchstart',e=>{
+    if(e.target.classList.contains('port-circle'))return;
+    if(e.target.getAttribute('data-drag-handle')==='1')return;
+    if(e.target.getAttribute('data-resize')==='1')return;
+    if(comp.type==='COMMENT')return;
+    if(g.querySelector('[data-edit="1"]'))return;
+    e.stopPropagation();
+    panning=null; // cancel canvas pan so drag takes over
+    const touch=e.touches[0];
+    const pt=svgPt(touch);
+    if(!selectedIds.has(comp.id))selectOne(comp.id);
+    dragging={
+      ids:new Set(selectedIds),
+      offsets:new Map([...selectedIds].map(id=>{
+        const c=state.components.find(c=>c.id===id);
+        return[id,{ox:pt.x-c.x,oy:pt.y-c.y}];
+      })),
+      moved:false,
+    };
+  },{passive:true});
 
   g.addEventListener('click',e=>{
     e.stopPropagation();
@@ -673,6 +705,130 @@ document.getElementById('canvas').addEventListener('click',e=>{
     if(justBoxSelected){ justBoxSelected=false; return; }
     clearSelection();
   }
+});
+
+// ── TOUCH EVENTS ──────────────────────────────────────────────
+
+function touchDist(e){
+  const t=e.touches;
+  if(t.length<2)return null;
+  const dx=t[0].clientX-t[1].clientX, dy=t[0].clientY-t[1].clientY;
+  return Math.sqrt(dx*dx+dy*dy);
+}
+
+// Canvas-wrapper touchstart: pan or pinch-zoom start
+document.getElementById('canvas-wrapper').addEventListener('touchstart',e=>{
+  if(e.touches.length===2){
+    e.preventDefault();
+    pinchStart={dist:touchDist(e),zoom};
+    panning=null;
+    return;
+  }
+  if(e.touches.length===1){
+    // Only start pan if touch is on the canvas background (not a component)
+    const tgt=e.target;
+    if(tgt.id==='canvas'||tgt.id==='canvas-bg'){
+      // Handle place mode: tap canvas to place selected component type
+      if(placingType){
+        e.preventDefault();
+        const touch=e.touches[0];
+        const pt=svgPt(touch);
+        const def=GATES[placingType];
+        const comp={id:newId(),type:placingType,
+          x:Math.max(0,pt.x-def.w/2),y:Math.max(0,pt.y-def.h/2),value:0,label:''};
+        if(placingType==='INPUT')       comp.label=nextInputLabel();
+        else if(placingType==='OUTPUT') comp.label=nextOutputLabel();
+        else if(placingType==='COMMENT'){comp.comment='Note...';comp.cw=130;comp.ch=64;}
+        state.components.push(comp);
+        propagate();render();
+        setPlacingType(null);
+        closeMobileSidebars();
+        return;
+      }
+      panning={sx:e.touches[0].clientX,sy:e.touches[0].clientY};
+    }
+  }
+},{passive:false});
+
+document.addEventListener('touchmove',e=>{
+  // Pinch zoom
+  if(e.touches.length===2&&pinchStart){
+    e.preventDefault();
+    const d=touchDist(e);
+    if(!d)return;
+    zoom=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,+(pinchStart.zoom*(d/pinchStart.dist)).toFixed(2)));
+    applyZoom();
+    return;
+  }
+  const touch=e.touches[0];
+  const fakeEv={clientX:touch.clientX,clientY:touch.clientY};
+  // Pan
+  if(panning){
+    e.preventDefault();
+    const wr=document.getElementById('canvas-wrapper');
+    wr.scrollLeft+=panning.sx-touch.clientX;
+    wr.scrollTop +=panning.sy-touch.clientY;
+    panning.sx=touch.clientX; panning.sy=touch.clientY;
+    return;
+  }
+  // Drag component
+  if(dragging){
+    e.preventDefault();
+    const pt=svgPt(fakeEv);
+    let anyMoved=false;
+    dragging.ids.forEach(id=>{
+      const c=state.components.find(c=>c.id===id);if(!c)return;
+      const off=dragging.offsets.get(id);if(!off)return;
+      const nx=Math.max(0,pt.x-off.ox),ny=Math.max(0,pt.y-off.oy);
+      if(!dragging.moved&&(Math.abs(nx-c.x)+Math.abs(ny-c.y))<4)return;
+      c.x=nx;c.y=ny;anyMoved=true;
+      const cg=document.querySelector(`#comps-layer [data-id="${id}"]`);
+      if(cg)cg.setAttribute('transform',`translate(${c.x},${c.y})`);
+      liveUpdateWires(id);
+    });
+    if(anyMoved)dragging.moved=true;
+    return;
+  }
+  // Wire drawing
+  if(drawingWire){
+    e.preventDefault();
+    const pt=svgPt(fakeEv);
+    document.getElementById('temp-wire')
+      .setAttribute('d',wirePath(drawingWire.x1,drawingWire.y1,pt.x,pt.y));
+    return;
+  }
+},{passive:false});
+
+document.addEventListener('touchend',e=>{
+  pinchStart=null;
+  // End drag
+  if(dragging){
+    const wasMoved=dragging.moved;
+    const firstId=[...dragging.ids][0];
+    const comp=state.components.find(c=>c.id===firstId);
+    dragging=null;
+    if(wasMoved){propagate();render();}
+    else if(comp&&comp.type==='INPUT'){
+      comp.value=comp.value?0:1;propagate();render();
+    }
+    return;
+  }
+  // End wire
+  if(drawingWire){
+    const touch=e.changedTouches[0];
+    const target=document.elementFromPoint(touch.clientX,touch.clientY);
+    if(target&&target.classList.contains('port-in')){
+      const toId=target.getAttribute('data-comp-id');
+      const toPort=parseInt(target.getAttribute('data-port'));
+      if(toId!==drawingWire.fromId&&!state.wires.find(w=>w.toId===toId&&w.toPort===toPort)){
+        state.wires.push({id:`w${uid++}`,fromId:drawingWire.fromId,toId,toPort});
+        propagate();
+      }
+    }
+    cancelWire();render();return;
+  }
+  // End pan
+  if(panning){panning=null;return;}
 });
 
 function liveUpdateWires(compId){
@@ -861,6 +1017,107 @@ function toggleTheme(){
   localStorage.setItem('lg_theme',light?'light':'dark');
 }
 
+// ── MOBILE UI ─────────────────────────────────────────────────
+
+function setPlacingType(type){
+  placingType=type;
+  const hint=document.getElementById('place-hint');
+  if(!hint)return;
+  if(type){hint.textContent=`Tap canvas to place ${type}`;hint.classList.add('visible');}
+  else{hint.classList.remove('visible');}
+}
+
+function closeMobileSidebars(){
+  document.getElementById('left-sidebar') .classList.remove('mobile-open');
+  document.getElementById('right-sidebar').classList.remove('mobile-open');
+  const bd=document.getElementById('mobile-backdrop');if(bd)bd.classList.remove('visible');
+  document.querySelectorAll('.mobile-nav-btn').forEach(b=>b.classList.remove('active'));
+}
+
+function setupMobileUI(){
+  // Inject place-hint bar
+  const hint=document.createElement('div');
+  hint.id='place-hint';document.body.appendChild(hint);
+  hint.addEventListener('click',()=>setPlacingType(null));
+
+  // Inject backdrop
+  const bd=document.createElement('div');
+  bd.id='mobile-backdrop';document.body.appendChild(bd);
+  bd.addEventListener('click',closeMobileSidebars);
+
+  // Inject drag-handle pills into sidebar headers
+  document.querySelectorAll('.sidebar-header').forEach(h=>{
+    const pill=document.createElement('div');
+    pill.className='sidebar-drag-handle';
+    h.parentElement.insertBefore(pill,h);
+  });
+
+  // Inject mobile bottom nav
+  const nav=document.createElement('div');
+  nav.id='mobile-nav';
+  nav.innerHTML=`
+    <button class="mobile-nav-btn" id="mobile-btn-comp">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Components
+    </button>
+    <button class="mobile-nav-btn" id="mobile-btn-truth">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3h18v18H3z"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+      Truth Table
+    </button>`;
+  document.body.appendChild(nav);
+
+  const ls=document.getElementById('left-sidebar');
+  const rs=document.getElementById('right-sidebar');
+
+  document.getElementById('mobile-btn-comp').addEventListener('click',()=>{
+    const isOpen=ls.classList.contains('mobile-open');
+    closeMobileSidebars();
+    if(!isOpen){
+      ls.classList.add('mobile-open');
+      bd.classList.add('visible');
+      document.getElementById('mobile-btn-comp').classList.add('active');
+    }
+    setPlacingType(null);
+  });
+
+  document.getElementById('mobile-btn-truth').addEventListener('click',()=>{
+    const isOpen=rs.classList.contains('mobile-open');
+    closeMobileSidebars();
+    if(!isOpen){
+      rs.classList.add('mobile-open');
+      bd.classList.add('visible');
+      document.getElementById('mobile-btn-truth').classList.add('active');
+    }
+    setPlacingType(null);
+  });
+
+  // Swipe down on open sidebar to close
+  let swipeStartY=null;
+  [ls,rs].forEach(sidebar=>{
+    sidebar.addEventListener('touchstart',e=>{swipeStartY=e.touches[0].clientY;},{passive:true});
+    sidebar.addEventListener('touchend',e=>{
+      if(swipeStartY===null)return;
+      const dy=e.changedTouches[0].clientY-swipeStartY;
+      if(dy>60)closeMobileSidebars();
+      swipeStartY=null;
+    },{passive:true});
+  });
+
+  // Tap to place: override comp-item click on mobile
+  document.getElementById('component-library').addEventListener('click',e=>{
+    const item=e.target.closest('.comp-item');
+    if(!item)return;
+    const type=item.dataset.type;
+    if(!type||!GATES[type])return;
+    // Close sidebar and enter place mode
+    closeMobileSidebars();
+    setPlacingType(type);
+  });
+
+  // Fix zoom controls for mobile (no right sidebar)
+  document.getElementById('zoom-controls').style.right='12px';
+}
+
 // ── CLEAR ─────────────────────────────────────────────────────
 function clearCircuit(){
   if(state.components.length&&!confirm('Clear the entire circuit?'))return;
@@ -923,7 +1180,7 @@ function exportPNG(){
     }
     else if(t==='NOT'){
       ctx.beginPath();ctx.moveTo(4,4);ctx.lineTo(52,22);ctx.lineTo(4,40);ctx.closePath();outline();
-      dot(57,22,5);stub(-14,22,4,22);stub(62,22,72,22);
+      dot(57,22,5);stub(0,22,4,22);stub(62,22,72,22);
     }
     else if(t==='XOR'){
       ctx.beginPath();ctx.moveTo(12,4);ctx.bezierCurveTo(28,4,58,10,66,28);ctx.bezierCurveTo(58,46,28,52,12,52);ctx.bezierCurveTo(22,36,22,20,12,4);ctx.closePath();outline();
@@ -987,6 +1244,13 @@ function init(){
   }
   load();propagate();render();applyZoom();
 
+  // Mobile setup (after render so sidebar DOM is ready)
+  setupMobileUI();
+  // On mobile, zoom controls don't need to track the right sidebar
+  if(window.innerWidth<=640){
+    document.getElementById('zoom-controls').style.right='12px';
+  }
+
   document.getElementById('btn-export')  .addEventListener('click',exportPNG);
   document.getElementById('btn-clear')   .addEventListener('click',clearCircuit);
   document.getElementById('btn-theme')   .addEventListener('click',toggleTheme);
@@ -1013,6 +1277,7 @@ function init(){
   const zoomCtrls  = document.getElementById('zoom-controls');
   // Keep zoom controls anchored to the left edge of the right sidebar
   function updateZoomPos() {
+    if(window.innerWidth<=640)return; // mobile: zoom controls handled by CSS
     zoomCtrls.style.right = (rSidebar.offsetWidth + 12) + 'px';
   }
   updateZoomPos(); // set correct position on load
